@@ -1,0 +1,738 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Координатор — рабочая панель</title>
+<style>
+  :root{
+    --bg:#F4F5F7; --card:#FFFFFF; --ink:#1B2130; --muted:#6B7280; --line:#E4E6EB;
+    --accent:#3D4B94; --accent-soft:#EEF0FA;
+    --amber:#C97A2B; --amber-soft:#FBEEE0;
+    --green:#2E8B57; --green-soft:#E7F5EC;
+    --red:#C0392B; --red-soft:#FBEAE8;
+    --violet:#7A4FBF; --violet-soft:#F1EBFA;
+    --teal:#1D8A8A; --teal-soft:#E4F5F5;
+    --mono: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif; background:var(--bg); color:var(--ink);}
+  header{display:flex; align-items:center; justify-content:space-between; padding:18px 24px; background:var(--card); border-bottom:1px solid var(--line); position:sticky; top:0; z-index:5; flex-wrap:wrap; gap:10px;}
+  header h1{font-size:18px; margin:0; letter-spacing:.2px;}
+  header .eyebrow{font-family:var(--mono); font-size:11px; color:var(--muted); letter-spacing:1px; text-transform:uppercase;}
+  #authArea{display:flex; align-items:center; gap:10px; flex-wrap:wrap;}
+  #userEmail{font-size:13px; color:var(--muted);}
+  .roleBadge{font-family:var(--mono); font-size:10.5px; padding:3px 9px; border-radius:20px; text-transform:uppercase; letter-spacing:.5px; font-weight:700;}
+  .roleBadge.admin{background:var(--accent-soft); color:var(--accent);}
+  .roleBadge.manager{background:var(--violet-soft); color:var(--violet);}
+  .roleBadge.supervisor{background:var(--amber-soft); color:var(--amber);}
+  .roleBadge.employee{background:var(--green-soft); color:var(--green);}
+  button{font-family:inherit; font-size:13px; border:1px solid var(--line); background:var(--card); padding:8px 14px; border-radius:8px; cursor:pointer; color:var(--ink);}
+  button.primary{background:var(--accent); color:#fff; border-color:var(--accent);}
+  button.danger{background:var(--red-soft); color:var(--red); border-color:#E7B9B2;}
+  button:hover{background:var(--bg);}
+  button.primary:hover{background:var(--accent); opacity:.92;}
+  button.danger:hover{background:var(--red); color:#fff;}
+  main{max-width:1500px; margin:0 auto; padding:24px;}
+  #configNotice{background:var(--amber-soft); border:1px solid #EAD2AE; color:#7A4B10; padding:14px 16px; border-radius:10px; margin-bottom:20px; font-size:13px; line-height:1.5;}
+  #configNotice code{background:#fff; padding:1px 5px; border-radius:4px;}
+  #accessDenied{background:var(--red-soft); border:1px solid #E7B9B2; color:var(--red); padding:18px; border-radius:10px; margin-bottom:20px; font-size:14px;}
+  
+  /* Панель фильтров */
+  .filter-panel-title { font-size: 12px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; }
+  .toolbar-filters { display: flex; gap: 10px; background: var(--card); border: 1px solid var(--line); padding: 14px; border-radius: 12px; margin-bottom: 16px; flex-wrap: wrap; align-items: center; }
+  .toolbar-filters select, .toolbar-filters input { padding: 7px 10px; border-radius: 8px; border: 1px solid var(--line); font-size: 13px; background: #fff; min-width: 140px; color: var(--ink); }
+  .toolbar-filters select:hover, .toolbar-filters input:hover { border-color: var(--muted); }
+  .filter-group { display: flex; flex-direction: column; gap: 4px; }
+  .filter-group label { font-size: 11px; color: var(--muted); font-weight: 500; }
+  .toolbar-actions { display: flex; gap: 10px; margin-bottom: 16px; justify-content: flex-end; align-items: center; }
+
+  .card{background:var(--card); border:1px solid var(--line); border-radius:12px; overflow:hidden; overflow-x:auto;}
+  table{width:100%; border-collapse:collapse; font-size:13.5px; min-width:1200px;}
+  th{text-align:left; padding:10px 12px; font-family:var(--mono); font-size:10.5px; text-transform:uppercase; letter-spacing:.6px; color:var(--muted); border-bottom:1px solid var(--line); background:#FAFBFC; white-space:nowrap;}
+  td{padding:10px 12px; border-bottom:1px solid var(--line); vertical-align:top;}
+  tr:last-child td{border-bottom:none;}
+  tr.deleted-row td{background:#FDF2F2; opacity:0.85;}
+  td input, td textarea, td select{width:100%; border:1px solid var(--line); background:#fff; font-family:inherit; font-size:13.5px; padding:4px 6px; border-radius:6px; color:var(--ink);}
+  td input:hover, td textarea:hover, td select:hover{border-color:var(--muted);}
+  td input:focus, td textarea:focus, td select:focus{outline:none; border-color:var(--accent); background:#fff;}
+  td .readonly{padding:4px 6px; color:var(--ink); border:1px solid transparent;}
+  .pill{display:inline-block; padding:2px 9px; border-radius:20px; font-size:12px; font-weight:600;}
+  .pill.status-todo{background:var(--amber-soft); color:var(--amber);}
+  .pill.status-progress{background:var(--accent-soft); color:var(--accent);}
+  .pill.status-done{background:var(--green-soft); color:var(--green);}
+  .pill.status-late{background:var(--red-soft); color:var(--red);}
+  .pill.status-deleted{background:#F3F4F6; color:#4B5563; border:1px dashed #9CA3AF;}
+  select.statusSelect{cursor:pointer;}
+  .commentCell textarea{min-height:38px; resize:vertical;}
+  .commentCell.manager.hasComment{background:var(--violet-soft); border-radius:8px;}
+  .commentCell.employee.hasComment{background:var(--teal-soft); border-radius:8px;}
+  .rowActions{display:flex; gap:6px; white-space:nowrap;}
+  .rowActions button{padding:5px 9px; font-size:12px;}
+  #addRow td{background:#FAFBFC;}
+  #emptyState{padding:40px; text-align:center; color:var(--muted); font-size:14px;}
+  footer{max-width:1500px; margin:20px auto; padding:0 24px 40px; font-size:12px; color:var(--muted);}
+  .deadline.overdue{color:var(--red); font-weight:600;}
+  .hidden{display:none !important;}
+
+  /* ===================== АДАПТИВНОСТЬ ===================== */
+
+  /* Планшет: чуть компактнее отступы и шрифты, таблица остаётся таблицей */
+  @media (max-width: 1024px){
+    main{padding:16px;}
+    header{padding:14px 16px;}
+    table{min-width:900px;}
+  }
+
+  /* Телефон: таблица превращается в список карточек — по одной задаче на карточку */
+  @media (max-width: 760px){
+    body{-webkit-text-size-adjust:100%;}
+    header{padding:12px 14px;}
+    header h1{font-size:16px;}
+    main{padding:12px;}
+    button{padding:10px 14px; font-size:14px;} /* крупнее для пальца */
+
+    .toolbar-filters{padding:12px;}
+    .filter-group{min-width:100%;}
+    .toolbar-filters select, .toolbar-filters input{width:100%; min-width:0; padding:10px;}
+    .toolbar-actions{justify-content:stretch;}
+    .toolbar-actions button{flex:1;}
+
+    .card{overflow-x:visible;}
+    table{min-width:0; width:100%;}
+    thead{display:none;} /* заголовки не нужны — подписи будут у каждого поля */
+
+    #taskTable, #taskTable tbody, #taskTable tr, #taskTable td{display:block; width:100%;}
+    #taskTable tr{
+      border:1px solid var(--line); border-radius:12px; margin:12px; overflow:hidden;
+      box-shadow:0 1px 3px rgba(0,0,0,.04);
+    }
+    #taskTable td{
+      display:flex; align-items:center; gap:10px;
+      padding:10px 14px; border-bottom:1px solid var(--line); text-align:right;
+    }
+    #taskTable td:last-child{border-bottom:none;}
+    #taskTable td::before{
+      content:attr(data-label); font-family:var(--mono); font-size:10px; text-transform:uppercase;
+      letter-spacing:.4px; color:var(--muted); font-weight:700; text-align:left; flex:0 0 40%;
+    }
+    #taskTable td > *{flex:1; min-width:0;}
+    #taskTable td.rowActions{flex-direction:column; align-items:stretch; gap:8px;}
+    #taskTable td.rowActions::before{flex:0 0 auto; margin-bottom:2px;}
+    #taskTable td.rowActions button{width:100%;}
+    #taskTable td input, #taskTable td select, #taskTable td textarea{text-align:right; font-size:14px;}
+    #taskTable td .readonly{text-align:right; width:100%;}
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div>
+    <div class="eyebrow">Личная панель координатора</div>
+    <h1>Задачи и дедлайны</h1>
+  </div>
+  <div id="authArea">
+    <span id="roleBadge" class="roleBadge hidden"></span>
+    <span id="userEmail"></span>
+    <button id="loginBtn" class="primary">Войти через Google</button>
+    <button id="logoutBtn" class="hidden">Выйти</button>
+  </div>
+</header>
+
+<main>
+  <div id="configNotice">
+    Перед первым запуском впиши свои <code>CLIENT_ID</code>, <code>API_KEY</code> и <code>SPREADSHEET_ID</code>
+    в блоке <code>CONFIG</code> в конце этого файла. Убедитесь, что в таблице `Tasks` настроено 11 колонок.
+  </div>
+
+  <div id="accessDenied" class="hidden">
+    Твой email не найден в листе "Roles" этой таблицы. Попроси администратора добавить тебя туда.
+  </div>
+
+  <div id="appArea" class="hidden">
+    
+    <!-- Панель мульти-фильтрации колонок -->
+    <div class="filter-panel-title" id="filterTitle">Фильтрация и поиск заявок</div>
+    <div class="toolbar-filters" id="filterBar">
+      <div class="filter-group">
+        <label>Исполнитель</label>
+        <select id="filterAssignee"><option value="">Все исполнители</option></select>
+      </div>
+      
+      <div class="filter-group">
+        <label>Статус задачи</label>
+        <select id="filterStatus">
+          <option value="">Все статусы</option>
+          <option value="todo">К выполнению</option>
+          <option value="progress">В работе</option>
+          <option value="done">Готово</option>
+          <option value="late">Просрочено</option>
+          <option id="filterOptDeleted" value="deleted" class="hidden">Удаленные менеджером</option>
+        </select>
+      </div>
+
+      <div class="filter-group">
+        <label>Приоритет</label>
+        <select id="filterPriority">
+          <option value="">Все приоритеты</option>
+          <option value="Обычный">Обычный</option>
+          <option value="Высокий">Высокий</option>
+          <option value="Низкий">Низкий</option>
+        </select>
+      </div>
+
+      <div class="filter-group">
+        <label>Кто поставил</label>
+        <select id="filterCreator"><option value="">Все авторы</option></select>
+      </div>
+
+      <div class="filter-group">
+        <label>Точный дедлайн</label>
+        <input type="date" id="filterDeadline">
+      </div>
+      
+      <div class="filter-group" style="justify-content: flex-end; height: 44px;">
+        <button id="resetFiltersBtn" style="padding: 6px 12px;">Сбросить фильтры</button>
+      </div>
+    </div>
+
+    <!-- Кнопки основных действий -->
+    <div class="toolbar-actions">
+      <button id="refreshBtn">Обновить базу данных</button>
+      <button id="showAddBtn" class="primary hidden">+ Новая задача</button>
+    </div>
+
+    <div class="card">
+      <table id="taskTable">
+        <thead>
+          <tr id="headRow">
+            <th data-label="Дата составления">Дата составления</th>
+            <th data-label="Задача">Задача</th>
+            <th data-label="Исполнитель">Исполнитель</th>
+            <th data-label="Дедлайн">Дедлайн</th>
+            <th data-label="Статус">Статус</th>
+            <th data-label="Приоритет">Приоритет</th>
+            <th data-label="Заметки">Заметки</th>
+            <th data-label="Коммент. руководителя">Коммент. руководителя</th>
+            <th data-label="Коммент. сотрудника">Коммент. сотрудника</th>
+            <th data-label="Кто поставил">Кто поставил</th>
+            <th data-label="Управление">Управление</th>
+          </tr>
+        </thead>
+        <tbody id="taskBody">
+          <tr id="addRow" class="hidden">
+            <td data-label="Дата составления"><span id="autoCreatedDate" class="readonly" style="font-size:12px; color:var(--muted);">Авто</span></td>
+            <td data-label="Задача"><input id="newTask" placeholder="Что нужно сделать"></td>
+            <td data-label="Исполнитель"><select id="newAssignee"><option value="">Выбери исполнителя</option></select></td>
+            <td data-label="Дедлайн"><input id="newDeadline" type="date"></td>
+            <td data-label="Статус">
+              <select id="newStatus">
+                <option value="todo">К выполнению</option>
+                <option value="progress">В работе</option>
+                <option value="done">Готово</option>
+              </select>
+            </td>
+            <td data-label="Приоритет">
+              <select id="newPriority">
+                <option value="Обычный">Обычный</option>
+                <option value="Высокий">Высокий</option>
+                <option value="Низкий">Низкий</option>
+              </select>
+            </td>
+            <td data-label="Заметки"><input id="newNotes" placeholder="Комментарий"></td>
+            <td data-label="Коммент. руководителя"></td>
+            <td data-label="Коммент. сотрудника"></td>
+            <td data-label="Кто поставил"><span id="autoAuthor" class="readonly" style="font-size:12px; color:var(--muted);">—</span></td>
+            <td data-label="Управление"><button id="saveNewBtn" class="primary">Добавить</button></td>
+          </tr>
+        </tbody>
+      </table>
+      <div id="emptyState" class="hidden">По указанным фильтрам задач не найдено.</div>
+    </div>
+  </div>
+</main>
+
+<footer>
+  Все данные хранятся в твоей собственной Google Таблице.
+</footer>
+
+<script src="https://apis.google.com/js/api.js"></script>
+<script src="https://accounts.google.com/gsi/client"></script>
+<script>
+// ======================= НАСТРОЙКИ (заполни своими значениями) =======================
+const CONFIG = {
+  CLIENT_ID: '675414803178-r4hn8mc8h9jha3eh0qhpd8f5gkofrbq7.apps.googleusercontent.com',
+  API_KEY: 'AIzaSyBBoyWanWwQrGs6MZL-8T6vX5SoDnotT2w',
+  SPREADSHEET_ID: '1yvP4CL2p_k-AW8l37Lzy5FpOsgelcJ_BN81m8QVSBuw',
+  SHEET_NAME: 'Tasks',
+  ROLES_SHEET_NAME: 'Roles',
+  SCOPES: 'https://www.googleapis.com/auth/spreadsheets https://www.googleapis.com/auth/userinfo.email'
+};
+// =======================================================================================
+
+let tokenClient;
+let gapiInited = false;
+let gisInited = false;
+let tasks = []; // {rowNumber, createdDate, task, assignee, deadline, status, priority, notes, managerComment, employeeComment, deleteMarker, creator}
+let currentUser = null; // {email, role, name}
+let allTeamNames = [];
+let tasksSheetId = null; // числовой ID листа Tasks, нужен для настоящего удаления строки
+
+async function getTasksSheetId(){
+  if (tasksSheetId !== null) return tasksSheetId;
+  try{
+    const res = await gapi.client.sheets.spreadsheets.get({
+      spreadsheetId: CONFIG.SPREADSHEET_ID,
+      fields: 'sheets.properties'
+    });
+    const sheet = res.result.sheets.find(s => s.properties.title === CONFIG.SHEET_NAME);
+    tasksSheetId = sheet ? sheet.properties.sheetId : 0;
+    return tasksSheetId;
+  } catch(e){ console.error('Не удалось определить ID листа Tasks', e); return 0; }
+}
+
+function gapiLoaded(){
+  gapi.load('client', async () => {
+    await gapi.client.init({
+      apiKey: CONFIG.API_KEY,
+      discoveryDocs: ['https://sheets.googleapis.com/$discovery/rest?version=v4'],
+    });
+    gapiInited = true;
+    maybeEnable();
+  });
+}
+
+function gisLoaded(){
+  tokenClient = google.accounts.oauth2.initTokenClient({
+    client_id: CONFIG.CLIENT_ID,
+    scope: CONFIG.SCOPES,
+    callback: (resp) => {
+      if (resp.error) { console.error(resp); return; }
+      onSignedIn();
+    },
+  });
+  gisInited = true;
+  maybeEnable();
+}
+
+function maybeEnable(){
+  if (gapiInited && gisInited) document.getElementById('loginBtn').disabled = false;
+}
+
+async function onSignedIn(){
+  document.getElementById('loginBtn').classList.add('hidden');
+  document.getElementById('logoutBtn').classList.remove('hidden');
+  const email = await fetchProfileEmail();
+  document.getElementById('userEmail').textContent = email || '';
+  const role = await resolveRole(email);
+  if (!role){
+    document.getElementById('accessDenied').classList.remove('hidden');
+    document.getElementById('appArea').classList.add('hidden');
+    return;
+  }
+  currentUser = role;
+  currentUser.displayName = currentUser.name || currentUser.email; // подстраховка: если имя не вписано в Roles, используем email
+  document.getElementById('accessDenied').classList.add('hidden');
+  
+  const badge = document.getElementById('roleBadge');
+  const roleLabels = {admin:'Директор / Админ', manager:'Менеджер', supervisor:'Руководитель', employee:'Сотрудник'};
+  badge.textContent = roleLabels[currentUser.role] || currentUser.role;
+  badge.className = 'roleBadge ' + currentUser.role;
+  badge.classList.remove('hidden');
+  
+  document.getElementById('appArea').classList.remove('hidden');
+  
+  const canCreate = ['admin', 'manager', 'supervisor'].includes(currentUser.role);
+  document.getElementById('showAddBtn').classList.toggle('hidden', !canCreate);
+  document.getElementById('autoAuthor').textContent = currentUser.displayName;
+  
+  // Для исполнителей скрываем общую панель фильтров
+  if (currentUser.role === 'employee') {
+    document.getElementById('filterBar').classList.add('hidden');
+    document.getElementById('filterTitle').classList.add('hidden');
+  } else {
+    document.getElementById('filterBar').classList.remove('hidden');
+    document.getElementById('filterTitle').classList.remove('hidden');
+  }
+  
+  document.getElementById('filterOptDeleted').classList.toggle('hidden', currentUser.role !== 'admin');
+
+  await loadTeamNames();
+  loadTasks();
+}
+
+async function loadTeamNames(){
+  try{
+    const res = await gapi.client.sheets.spreadsheets.values.get({
+      spreadsheetId: CONFIG.SPREADSHEET_ID,
+      range: `${CONFIG.ROLES_SHEET_NAME}!A2:C`,
+    });
+    const rows = res.result.values || [];
+    allTeamNames = rows
+      .filter(r => (r[2] || '').trim())
+      .map(r => r[2].trim());
+    populateNewAssigneeSelect();
+  } catch(e){ console.warn('Не удалось загрузить список команды', e); }
+}
+
+function populateNewAssigneeSelect(){
+  const sel = document.getElementById('newAssignee');
+  if (!sel) return;
+  sel.innerHTML = '<option value="">Выбери исполнителя</option>' +
+    allTeamNames.map(n => `<option value="${escapeHtml(n)}">${escapeHtml(n)}</option>`).join('');
+}
+
+async function fetchProfileEmail(){
+  try{
+    const token = gapi.client.getToken();
+    const res = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+      headers: { Authorization: 'Bearer ' + token.access_token }
+    });
+    const data = await res.json();
+    return data.email || '';
+  } catch(e){ console.warn('Не удалось получить профиль', e); return ''; }
+}
+
+async function resolveRole(email){
+  try{
+    const res = await gapi.client.sheets.spreadsheets.values.get({
+      spreadsheetId: CONFIG.SPREADSHEET_ID,
+      range: `${CONFIG.ROLES_SHEET_NAME}!A2:C`,
+    });
+    const rows = res.result.values || [];
+    const match = rows.find(r => (r[0] || '').trim().toLowerCase() === email.trim().toLowerCase());
+    if (!match) return null;
+    return { email, role: (match[1] || 'employee').trim().toLowerCase(), name: (match[2] || '').trim() };
+  } catch(e){ return null; }
+}
+
+document.getElementById('loginBtn').addEventListener('click', () => {
+  tokenClient.requestAccessToken({prompt: 'consent'});
+});
+
+document.getElementById('logoutBtn').addEventListener('click', () => {
+  const token = gapi.client.getToken();
+  if (token !== null){ google.accounts.oauth2.revoke(token.access_token); gapi.client.setToken(''); }
+  document.getElementById('loginBtn').classList.remove('hidden');
+  document.getElementById('logoutBtn').classList.add('hidden');
+  document.getElementById('roleBadge').classList.add('hidden');
+  document.getElementById('userEmail').textContent = '';
+  document.getElementById('appArea').classList.add('hidden');
+  tasks = []; currentUser = null;
+});
+
+async function loadTasks(){
+  const range = `${CONFIG.SHEET_NAME}!A2:K`;
+  try{
+    const res = await gapi.client.sheets.spreadsheets.values.get({
+      spreadsheetId: CONFIG.SPREADSHEET_ID, range,
+    });
+    const rows = res.result.values || [];
+    
+    let allTasks = rows.map((r, i) => ({
+      rowNumber: i + 2,
+      createdDate: r[0] || 'Не указана',
+      task: r[1] || '', assignee: r[2] || '', deadline: r[3] || '',
+      status: r[4] || 'todo', priority: r[5] || 'Обычный', notes: r[6] || '',
+      managerComment: r[7] || '', employeeComment: r[8] || '',
+      deleteMarker: r[9] || '',
+      creator: r[10] || 'Не указан'
+    }));
+
+    if (currentUser.role === 'admin') {
+      tasks = allTasks;
+    } else {
+      tasks = allTasks.filter(t => t.deleteMarker !== 'deleted_by_manager');
+      if (currentUser.role === 'employee') {
+        tasks = tasks.filter(t => t.assignee.trim().toLowerCase() === currentUser.name.trim().toLowerCase());
+      }
+    }
+
+    populateDynamicFilters();
+    renderTasks();
+  } catch(e){ alert('Ошибка загрузки данных.'); }
+}
+
+function populateDynamicFilters(){
+  const assignees = [...new Set(tasks.map(t => t.assignee).filter(Boolean))];
+  const creators = [...new Set(tasks.map(t => t.creator).filter(Boolean))];
+
+  const selAssignee = document.getElementById('filterAssignee');
+  const currAssignee = selAssignee.value;
+  selAssignee.innerHTML = '<option value="">Все исполнители</option>' + assignees.map(n => `<option value="${n}">${n}</option>`).join('');
+  selAssignee.value = currAssignee;
+
+  const selCreator = document.getElementById('filterCreator');
+  const currCreator = selCreator.value;
+  selCreator.innerHTML = '<option value="">Все авторы</option>' + creators.map(c => `<option value="${c}">${c}</option>`).join('');
+  selCreator.value = currCreator;
+}
+
+function isOverdue(t){
+  if (!t.deadline || t.status === 'done' || t.deleteMarker === 'deleted_by_manager') return false;
+  return new Date(t.deadline) < new Date(new Date().toDateString());
+}
+
+function renderTasks(){
+  const body = document.getElementById('taskBody');
+  const addRow = document.getElementById('addRow');
+  [...body.querySelectorAll('tr:not(#addRow)')].forEach(r => r.remove());
+
+  const fAssignee = document.getElementById('filterAssignee').value;
+  const fStatus = document.getElementById('filterStatus').value;
+  const fPriority = document.getElementById('filterPriority').value;
+  const fCreator = document.getElementById('filterCreator').value;
+  const fDeadline = document.getElementById('filterDeadline').value;
+  
+  const filtered = tasks.filter(t => {
+    if (fAssignee && t.assignee !== fAssignee) return false;
+    if (fPriority && t.priority !== fPriority) return false;
+    if (fCreator && t.creator !== fCreator) return false;
+    if (fDeadline && t.deadline !== fDeadline) return false;
+    
+    if (fStatus) {
+      if (fStatus === 'late') return isOverdue(t);
+      if (fStatus === 'deleted') return t.deleteMarker === 'deleted_by_manager';
+      return t.status === fStatus && t.deleteMarker !== 'deleted_by_manager';
+    }
+    return true;
+  });
+  
+  document.getElementById('emptyState').classList.toggle('hidden', filtered.length !== 0);
+  const role = currentUser.role;
+
+  filtered.forEach(t => {
+    const tr = document.createElement('tr');
+    if (t.deleteMarker === 'deleted_by_manager') tr.classList.add('deleted-row');
+
+    let effectiveStatus = isOverdue(t) ? 'late' : t.status;
+    if (t.deleteMarker === 'deleted_by_manager') effectiveStatus = 'deleted';
+
+    const isCreatorSupervisor = role === 'supervisor' && t.creator.trim().toLowerCase() === currentUser.displayName.trim().toLowerCase();
+    const coreEditable = (role === 'admin' || role === 'manager' || isCreatorSupervisor) && t.deleteMarker !== 'deleted_by_manager';
+    
+    const statusEditable = (role === 'admin' || role === 'manager' || role === 'employee') && t.deleteMarker !== 'deleted_by_manager';
+    const managerCommentEditable = (role === 'admin' || role === 'supervisor') && t.deleteMarker !== 'deleted_by_manager';
+    const employeeCommentEditable = (role === 'admin' || role === 'employee') && t.deleteMarker !== 'deleted_by_manager';
+
+    const field = (val, name, type) => {
+      if (!coreEditable){
+        if (name === 'deadline' && isOverdue(t)) {
+          return `<div class="readonly deadline overdue">${escapeHtml(val)}</div>`;
+        }
+        return `<div class="readonly">${escapeHtml(val)}</div>`;
+      }
+      if (name === 'assignee'){
+        const opts = allTeamNames.map(n => `<option value="${escapeHtml(n)}" ${n===val?'selected':''}>${escapeHtml(n)}</option>`).join('');
+        const extra = val && !allTeamNames.includes(val) ? `<option value="${escapeHtml(val)}" selected>${escapeHtml(val)}</option>` : '';
+        return `<select data-field="assignee"><option value="">—</option>${extra}${opts}</select>`;
+      }
+      if (name === 'priority') {
+        return `
+          <select data-field="priority">
+            <option value="Обычный" ${val==='Обычный'?'selected':''}>Обычный</option>
+            <option value="Высокий" ${val==='Высокий'?'selected':''}>Высокий</option>
+            <option value="Низкий" ${val==='Низкий'?'selected':''}>Низкий</option>
+          </select>`;
+      }
+      return `<input value="${escapeHtml(val)}" data-field="${name}" ${type ? `type="${type}"` : ''} />`;
+    };
+
+    let statusCell = '';
+    if (statusEditable) {
+      statusCell = `
+        <select data-field="status" class="statusSelect">
+          <option value="todo" ${t.status==='todo'?'selected':''}>К выполнению</option>
+          <option value="progress" ${t.status==='progress'?'selected':''}>В работе</option>
+          <option value="done" ${t.status==='done'?'selected':''}>Готово</option>
+        </select>`;
+    } else {
+      const statusLabels = {todo:'К выполнению', progress:'В работе', done:'Готово', late:'Просрочено', deleted:'Удалено менеджером'};
+      statusCell = `<span class="pill status-${effectiveStatus}">${statusLabels[effectiveStatus] || effectiveStatus}</span>`;
+    }
+
+    const managerCommentCell = managerCommentEditable
+      ? `<textarea data-field="managerComment" placeholder="Коммент руководителя...">${escapeHtml(t.managerComment)}</textarea>`
+      : `<div class="readonly">${escapeHtml(t.managerComment)}</div>`;
+
+    const employeeCommentCell = employeeCommentEditable
+      ? `<textarea data-field="employeeComment" placeholder="Коммент сотрудника...">${escapeHtml(t.employeeComment)}</textarea>`
+      : `<div class="readonly">${escapeHtml(t.employeeComment)}</div>`;
+
+    let actionButtons = `<button data-action="save" class="primary">Сохранить</button>`;
+    if (role === 'manager' && t.deleteMarker !== 'deleted_by_manager') {
+      actionButtons += ` <button data-action="soft-delete" class="danger">Удалить</button>`;
+    }
+    if (role === 'admin') {
+      actionButtons += ` <button data-action="hard-delete" class="danger">Удалить навсегда</button>`;
+    }
+
+    tr.innerHTML = `
+      <td data-label="Дата составления"><div class="readonly" style="font-size:12px; font-weight:500; white-space:nowrap;">${escapeHtml(t.createdDate)}</div></td>
+      <td data-label="Задача">${field(t.task, 'task')}</td>
+      <td data-label="Исполнитель">${field(t.assignee, 'assignee')}</td>
+      <td data-label="Дедлайн">${field(t.deadline, 'deadline', 'date')}</td>
+      <td data-label="Статус">${statusCell}</td>
+      <td data-label="Приоритет">${field(t.priority, 'priority')}</td>
+      <td data-label="Заметки">${field(t.notes, 'notes')}</td>
+      <td data-label="Коммент. руководителя" class="commentCell manager ${t.managerComment ? 'hasComment' : ''}">${managerCommentCell}</td>
+      <td data-label="Коммент. сотрудника" class="commentCell employee ${t.employeeComment ? 'hasComment' : ''}">${employeeCommentCell}</td>
+      <td data-label="Кто поставил"><div class="readonly" style="font-size:12px; font-weight:500;">${escapeHtml(t.creator)}</div></td>
+      <td data-label="Управление" class="rowActions">${actionButtons}</td>
+    `;
+    tr.dataset.row = t.rowNumber;
+    body.appendChild(tr);
+  });
+  body.appendChild(addRow);
+}
+
+document.getElementById('taskBody').addEventListener('click', async (e) => {
+  const btn = e.target.closest('button');
+  if (!btn) return;
+  
+  const tr = btn.closest('tr');
+  const rowNumber = tr.dataset.row;
+  const action = btn.dataset.action;
+  const existing = tasks.find(t => t.rowNumber == rowNumber);
+  const role = currentUser.role;
+
+  if (action === 'save') {
+    const isCreatorSupervisor = role === 'supervisor' && existing && existing.creator.trim().toLowerCase() === currentUser.displayName.trim().toLowerCase();
+    
+    if (role === 'admin' || role === 'manager' || isCreatorSupervisor) {
+      const values = {};
+      tr.querySelectorAll('[data-field]').forEach(el => values[el.dataset.field] = el.value);
+      // Поля, которых нет в форме текущей роли (скрытые как readonly), НЕ должны затираться —
+      // подставляем их прежнее значение из уже загруженных данных.
+      const safe = (field) => values[field] !== undefined ? values[field] : (existing ? existing[field] : '');
+      const row = [
+        safe('task'), safe('assignee'), safe('deadline'), safe('status'), safe('priority'),
+        safe('notes'), safe('managerComment'), safe('employeeComment')
+      ];
+      await updateRange(`B${rowNumber}:I${rowNumber}`, row);
+      if(existing) Object.assign(existing, {
+        task: row[0], assignee: row[1], deadline: row[2], status: row[3], priority: row[4],
+        notes: row[5], managerComment: row[6], employeeComment: row[7]
+      });
+    } else if (role === 'supervisor') {
+      const comment = tr.querySelector('[data-field="managerComment"]').value;
+      await updateRange(`H${rowNumber}:H${rowNumber}`, [comment]);
+      if(existing) existing.managerComment = comment;
+    } else if (role === 'employee') {
+      const status = tr.querySelector('[data-field="status"]').value;
+      const comment = tr.querySelector('[data-field="employeeComment"]').value;
+      await updateRange(`E${rowNumber}:E${rowNumber}`, [status]);
+      await updateRange(`I${rowNumber}:I${rowNumber}`, [comment]);
+      if(existing) { existing.status = status; existing.employeeComment = comment; }
+    }
+    btn.textContent = 'Сохранено ✓';
+    setTimeout(() => { loadTasks(); }, 800);
+
+  } else if (action === 'soft-delete') {
+    if (confirm('Скрыть эту задачу для команды?')) {
+      await updateRange(`J${rowNumber}:J${rowNumber}`, ['deleted_by_manager']);
+      loadTasks();
+    }
+  } else if (action === 'hard-delete') {
+    if (confirm('Вы уверены, что хотите окончательно стереть эту задачу из базы данных?')) {
+      const sheetId = await getTasksSheetId();
+      const rowIndex = parseInt(rowNumber, 10) - 1; // 0-indexed для API
+      try{
+        await gapi.client.sheets.spreadsheets.batchUpdate({
+          spreadsheetId: CONFIG.SPREADSHEET_ID,
+          resource: {
+            requests: [{
+              deleteDimension: {
+                range: { sheetId: sheetId, dimension: 'ROWS', startIndex: rowIndex, endIndex: rowIndex + 1 }
+              }
+            }]
+          }
+        });
+        loadTasks();
+      } catch(e){ console.error(e); alert('Не удалось удалить строку.'); }
+    }
+  }
+});
+
+async function updateRange(rangeSuffix, rowValues){
+  const range = `${CONFIG.SHEET_NAME}!${rangeSuffix}`;
+  try{
+    await gapi.client.sheets.spreadsheets.values.update({
+      spreadsheetId: CONFIG.SPREADSHEET_ID, range,
+      valueInputOption: 'USER_ENTERED',
+      resource: { values: [rowValues] },
+    });
+  } catch(e) { alert('Не удалось сохранить изменения.'); }
+}
+
+document.getElementById('showAddBtn').addEventListener('click', () => {
+  document.getElementById('addRow').classList.toggle('hidden');
+});
+
+document.getElementById('saveNewBtn').addEventListener('click', async () => {
+  const now = new Date();
+  
+  // Авто-генерация даты по Московскому времени (Europe/Moscow)
+  const moscowDate = now.toLocaleDateString('ru-RU', { timeZone: 'Europe/Moscow' });
+  const moscowTime = now.toLocaleTimeString('ru-RU', { 
+    timeZone: 'Europe/Moscow', 
+    hour: '2-digit', 
+    minute: '2-digit' 
+  });
+  const formattedDate = `${moscowDate} ${moscowTime}`;
+
+  const row = [
+    formattedDate, // Колонку A заполняем штампом МСК
+    document.getElementById('newTask').value,
+    document.getElementById('newAssignee').value,
+    document.getElementById('newDeadline').value,
+    document.getElementById('newStatus').value,
+    document.getElementById('newPriority').value,
+    document.getElementById('newNotes').value,
+    '', '', '', 
+    currentUser.displayName 
+  ];
+  if (!row[1]){ alert('Впиши название задачи'); return; }
+  try{
+    await gapi.client.sheets.spreadsheets.values.append({
+      spreadsheetId: CONFIG.SPREADSHEET_ID,
+      range: `${CONFIG.SHEET_NAME}!A:K`,
+      valueInputOption: 'USER_ENTERED',
+      insertDataOption: 'INSERT_ROWS',
+      resource: { values: [row] },
+    });
+    ['newTask','newAssignee','newDeadline','newNotes'].forEach(id => document.getElementById(id).value = '');
+    document.getElementById('addRow').classList.add('hidden');
+    loadTasks();
+  } catch(e){ alert('Не удалось добавить задачу.'); }
+});
+
+// Слушатели фильтров колонок
+document.getElementById('filterAssignee').addEventListener('change', renderTasks);
+document.getElementById('filterStatus').addEventListener('change', renderTasks);
+document.getElementById('filterPriority').addEventListener('change', renderTasks);
+document.getElementById('filterCreator').addEventListener('change', renderTasks);
+document.getElementById('filterDeadline').addEventListener('change', renderTasks);
+
+document.getElementById('resetFiltersBtn').addEventListener('click', () => {
+  document.getElementById('filterAssignee').value = "";
+  document.getElementById('filterStatus').value = "";
+  document.getElementById('filterPriority').value = "";
+  document.getElementById('filterCreator').value = "";
+  document.getElementById('filterDeadline').value = "";
+  renderTasks();
+});
+
+document.getElementById('refreshBtn').addEventListener('click', loadTasks);
+
+function escapeHtml(str){
+  return String(str).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+document.getElementById('loginBtn').disabled = true;
+gapiLoaded();
+gisLoaded();
+</script>
+</body>
+</html>
