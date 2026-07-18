@@ -81,6 +81,18 @@
   .deadline.overdue{color:var(--red); font-weight:600;}
   .hidden{display:none !important;}
 
+
+  .saveState{font-size:12px;color:var(--muted);min-width:130px;text-align:right;}
+  .saveState.saving{color:var(--amber);}
+  .saveState.saved{color:var(--green);}
+  .saveState.error{color:var(--red);}
+  .employeeTag{display:inline-flex;align-items:center;gap:7px;padding:5px 9px;border-radius:999px;font-weight:700;white-space:nowrap;}
+  .employeeDot{width:9px;height:9px;border-radius:50%;background:currentColor;box-shadow:0 0 0 3px rgba(255,255,255,.7);}
+  .statusHistory{font-size:11px;line-height:1.35;color:var(--muted);margin-top:5px;}
+  .dirty-row{box-shadow:inset 4px 0 0 var(--amber);}
+  .exportMenu{display:flex;gap:8px;flex-wrap:wrap;}
+  .mobile-filter-toggle{display:none;width:100%;justify-content:space-between;align-items:center;margin-bottom:8px;}
+
   /* ===================== АДАПТИВНОСТЬ ===================== */
 
   /* Планшет: чуть компактнее отступы и шрифты, таблица остаётся таблицей */
@@ -98,11 +110,16 @@
     main{padding:12px;}
     button{padding:10px 14px; font-size:14px;} /* крупнее для пальца */
 
-    .toolbar-filters{padding:12px;}
+    #stickyControls{position:static !important;top:auto !important;padding-top:0;}
+    .mobile-filter-toggle{display:flex;}
+    .toolbar-filters{padding:12px;max-height:none;overflow:visible;}
+    .toolbar-filters.mobile-collapsed{display:none;}
     .filter-group{min-width:100%;}
     .toolbar-filters select, .toolbar-filters input{width:100%; min-width:0; padding:10px;}
-    .toolbar-actions{justify-content:stretch;}
-    .toolbar-actions button{flex:1;}
+    .toolbar-actions{justify-content:stretch;display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+    .toolbar-actions button{width:100%;min-width:0;}
+    .toolbar-actions .saveState{grid-column:1/-1;text-align:center;min-width:0;}
+    .exportMenu{grid-column:1/-1;display:grid;grid-template-columns:1fr 1fr;}
 
     .card{overflow-x:visible;}
     table{min-width:0; width:100%;}
@@ -110,20 +127,20 @@
 
     #taskTable, #taskTable tbody, #taskTable tr, #taskTable td{display:block; width:100%;}
     #taskTable tr{
-      border:1px solid var(--line); border-radius:12px; margin:12px; overflow:hidden;
+      border:1px solid var(--line); border-radius:12px; margin:12px 0; overflow:hidden;
       box-shadow:0 1px 3px rgba(0,0,0,.04);
     }
     #taskTable td{
-      display:flex; align-items:center; gap:10px;
+      display:grid; grid-template-columns:minmax(110px,38%) minmax(0,1fr); align-items:center; gap:10px;
       padding:10px 14px; border-bottom:1px solid var(--line); text-align:right;
     }
     #taskTable td:last-child{border-bottom:none;}
     #taskTable td::before{
       content:attr(data-label); font-family:var(--mono); font-size:10px; text-transform:uppercase;
-      letter-spacing:.4px; color:var(--muted); font-weight:700; text-align:left; flex:0 0 40%;
+      letter-spacing:.4px; color:var(--muted); font-weight:700; text-align:left;
     }
-    #taskTable td > *{flex:1; min-width:0;}
-    #taskTable td.rowActions{flex-direction:column; align-items:stretch; gap:8px;}
+    #taskTable td > *{min-width:0;max-width:100%;}
+    #taskTable td.rowActions{display:flex;flex-direction:column; align-items:stretch; gap:8px;}
     #taskTable td.rowActions::before{flex:0 0 auto; margin-bottom:2px;}
     #taskTable td.rowActions button{width:100%;}
     #taskTable td input, #taskTable td select, #taskTable td textarea{text-align:right; font-size:14px;}
@@ -155,6 +172,7 @@
     
     <!-- Панель мульти-фильтрации колонок + основные действия — зафиксированы при прокрутке -->
     <div id="stickyControls">
+    <button id="mobileFilterToggle" class="mobile-filter-toggle"><span>Фильтры и поиск</span><span id="mobileFilterIcon">▼</span></button>
     <div class="filter-panel-title" id="filterTitle">Фильтрация и поиск заявок</div>
     <div class="toolbar-filters" id="filterBar">
       <div class="filter-group">
@@ -202,7 +220,13 @@
     <!-- Кнопки основных действий -->
     <div class="toolbar-actions">
       <button id="refreshBtn">Обновить базу данных</button>
+      <button id="saveAllBtn" class="primary">Быстро сохранить всё</button>
+      <div class="exportMenu">
+        <button id="exportExcelBtn">Выгрузить Excel</button>
+        <button id="exportPdfBtn">Выгрузить PDF</button>
+      </div>
       <button id="showAddBtn" class="primary hidden">+ Новая задача</button>
+      <span id="saveState" class="saveState">Все изменения сохранены</span>
     </div>
     </div><!-- /stickyControls -->
 
@@ -275,6 +299,7 @@
 
 <script src="https://apis.google.com/js/api.js"></script>
 <script src="https://accounts.google.com/gsi/client"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <script>
 // ======================= НАСТРОЙКИ (заполни своими значениями) =======================
 const CONFIG = {
@@ -290,10 +315,13 @@ const CONFIG = {
 let tokenClient;
 let gapiInited = false;
 let gisInited = false;
-let tasks = []; // {rowNumber, createdDate, task, assignee, deadline, status, priority, notes, managerComment, employeeComment, deleteMarker, creator}
+let tasks = []; // + statusChangedBy, statusChangedAt, statusHistory
 let currentUser = null; // {email, role, name}
 let allTeamNames = [];
 let tasksSheetId = null; // числовой ID листа Tasks, нужен для настоящего удаления строки
+let dirtyRows = new Set();
+let autoSaveTimers = new Map();
+let isBulkSaving = false;
 
 async function getTasksSheetId(){
   if (tasksSheetId !== null) return tasksSheetId;
@@ -306,6 +334,17 @@ async function getTasksSheetId(){
     tasksSheetId = sheet ? sheet.properties.sheetId : 0;
     return tasksSheetId;
   } catch(e){ console.error('Не удалось определить ID листа Tasks', e); return 0; }
+}
+
+async function ensureTechnicalHeaders(){
+  try{
+    await gapi.client.sheets.spreadsheets.values.update({
+      spreadsheetId: CONFIG.SPREADSHEET_ID,
+      range: `${CONFIG.SHEET_NAME}!L1:N1`,
+      valueInputOption: 'RAW',
+      resource: { values: [['Статус изменил','Когда изменён статус','История статусов']] }
+    });
+  }catch(e){ console.warn('Не удалось создать технические заголовки истории статусов',e); }
 }
 
 function gapiLoaded(){
@@ -374,6 +413,7 @@ async function onSignedIn(){
 
   document.getElementById('filterOptDeleted').classList.toggle('hidden', currentUser.role !== 'admin');
 
+  await ensureTechnicalHeaders();
   await loadTeamNames();
   loadTasks();
   updateStickyOffset();
@@ -440,7 +480,7 @@ document.getElementById('logoutBtn').addEventListener('click', () => {
 });
 
 async function loadTasks(){
-  const range = `${CONFIG.SHEET_NAME}!A2:K`;
+  const range = `${CONFIG.SHEET_NAME}!A2:N`;
   try{
     const res = await gapi.client.sheets.spreadsheets.values.get({
       spreadsheetId: CONFIG.SPREADSHEET_ID, range,
@@ -454,7 +494,10 @@ async function loadTasks(){
       status: r[4] || 'todo', priority: r[5] || 'Обычный', notes: r[6] || '',
       managerComment: r[7] || '', employeeComment: r[8] || '',
       deleteMarker: r[9] || '',
-      creator: r[10] || 'Не указан'
+      creator: r[10] || 'Не указан',
+      statusChangedBy: r[11] || '',
+      statusChangedAt: r[12] || '',
+      statusHistory: r[13] || ''
     }));
 
     if (currentUser.role === 'admin') {
@@ -489,6 +532,37 @@ function populateDynamicFilters(){
 function isOverdue(t){
   if (!t.deadline || t.status === 'done' || t.deleteMarker === 'deleted_by_manager') return false;
   return new Date(t.deadline) < new Date(new Date().toDateString());
+}
+
+
+function employeeColor(name){
+  const palette = [
+    ['#E8EEFF','#324AA8'],['#FCEDE8','#B5462E'],['#E6F7EE','#237A4B'],['#F5ECFF','#7441A8'],
+    ['#FFF3D9','#9A6500'],['#E4F6F6','#167676'],['#FDEAF3','#A6386D'],['#EEF1F4','#4B5563']
+  ];
+  let hash = 0;
+  for (const ch of String(name || '')) hash = ((hash << 5) - hash) + ch.charCodeAt(0);
+  return palette[Math.abs(hash) % palette.length];
+}
+function employeeTag(name){
+  const [bg,fg] = employeeColor(name);
+  return `<span class="employeeTag" style="background:${bg};color:${fg}"><span class="employeeDot"></span>${escapeHtml(name || 'Не назначен')}</span>`;
+}
+function setSaveState(text, state=''){
+  const el=document.getElementById('saveState');
+  el.textContent=text; el.className='saveState'+(state?' '+state:'');
+}
+function markDirty(tr){
+  if(!tr || !tr.dataset.row) return;
+  dirtyRows.add(String(tr.dataset.row));
+  tr.classList.add('dirty-row');
+  setSaveState(`Есть несохранённые изменения: ${dirtyRows.size}`,'saving');
+}
+function scheduleAutoSave(tr){
+  markDirty(tr);
+  const row=String(tr.dataset.row);
+  clearTimeout(autoSaveTimers.get(row));
+  autoSaveTimers.set(row,setTimeout(()=>saveTaskRow(tr,true),900));
 }
 
 function renderTasks(){
@@ -539,12 +613,14 @@ function renderTasks(){
         if (name === 'deadline' && isOverdue(t)) {
           return `<div class="readonly deadline overdue">${escapeHtml(val)}</div>`;
         }
+        if (name === 'assignee') return employeeTag(val);
         return `<div class="readonly">${escapeHtml(val)}</div>`;
       }
       if (name === 'assignee'){
         const opts = allTeamNames.map(n => `<option value="${escapeHtml(n)}" ${n===val?'selected':''}>${escapeHtml(n)}</option>`).join('');
         const extra = val && !allTeamNames.includes(val) ? `<option value="${escapeHtml(val)}" selected>${escapeHtml(val)}</option>` : '';
-        return `<select data-field="assignee"><option value="">—</option>${extra}${opts}</select>`;
+        const [bg,fg] = employeeColor(val);
+        return `<select data-field="assignee" style="background:${bg};color:${fg};font-weight:700"><option value="">—</option>${extra}${opts}</select>`;
       }
       if (name === 'priority') {
         return `
@@ -598,7 +674,7 @@ function renderTasks(){
       <td data-label="Задача">${field(t.task, 'task')}</td>
       <td data-label="Исполнитель">${field(t.assignee, 'assignee')}</td>
       <td data-label="Дедлайн">${field(t.deadline, 'deadline', 'date')}</td>
-      <td data-label="Статус">${statusCell}</td>
+      <td data-label="Статус">${statusCell}${t.statusChangedBy || t.statusChangedAt ? `<div class="statusHistory">Изменил: ${escapeHtml(t.statusChangedBy || '—')}<br>${escapeHtml(t.statusChangedAt || '')}</div>` : ''}</td>
       <td data-label="Приоритет">${field(t.priority, 'priority')}</td>
       <td data-label="Коммент. менеджера" class="commentCell notes ${t.notes ? 'hasComment' : ''}">${notesCell}</td>
       <td data-label="Коммент. руководителя" class="commentCell manager ${t.managerComment ? 'hasComment' : ''}">${managerCommentCell}</td>
@@ -619,6 +695,13 @@ function renderTasks(){
         statusSel.className = 'statusSelect status-' + statusSel.value;
       });
     }
+    tr.querySelectorAll('[data-field]').forEach(el => {
+      const evt = (el.tagName === 'SELECT' || el.type === 'date') ? 'change' : 'input';
+      el.addEventListener(evt, () => {
+        if(el.dataset.field === 'assignee'){ const [bg,fg]=employeeColor(el.value); el.style.background=bg; el.style.color=fg; el.style.fontWeight='700'; }
+        scheduleAutoSave(tr);
+      });
+    });
   });
   body.appendChild(addRow);
 }
@@ -632,6 +715,50 @@ function autosizeTextarea(el){
   }
 }
 
+async function saveTaskRow(tr, silent=false){
+  const rowNumber = tr.dataset.row;
+  const existing = tasks.find(t => t.rowNumber == rowNumber);
+  if(!existing || existing.deleteMarker === 'deleted_by_manager') return;
+  const role = currentUser.role;
+  const isCreatorSupervisor = role === 'supervisor' && existing.creator.trim().toLowerCase() === currentUser.displayName.trim().toLowerCase();
+  try{
+    setSaveState('Сохраняю изменения…','saving');
+    if (role === 'admin' || role === 'manager' || isCreatorSupervisor) {
+      const values = {};
+      tr.querySelectorAll('[data-field]').forEach(el => values[el.dataset.field] = el.value);
+      const safe = field => values[field] !== undefined ? values[field] : existing[field];
+      const newStatus = safe('status');
+      let changedBy = existing.statusChangedBy, changedAt = existing.statusChangedAt, history = existing.statusHistory || '';
+      if(newStatus !== existing.status){
+        changedBy = currentUser.displayName;
+        changedAt = new Date().toLocaleString('ru-RU',{timeZone:'Europe/Moscow'});
+        history = [history, `${changedAt} — ${changedBy}: ${existing.status} → ${newStatus}`].filter(Boolean).join('\n');
+      }
+      const row = [safe('task'),safe('assignee'),safe('deadline'),newStatus,safe('priority'),safe('notes'),safe('managerComment'),safe('employeeComment'),existing.deleteMarker,existing.creator,changedBy,changedAt,history];
+      await updateRange(`B${rowNumber}:N${rowNumber}`, row);
+      Object.assign(existing,{task:row[0],assignee:row[1],deadline:row[2],status:row[3],priority:row[4],notes:row[5],managerComment:row[6],employeeComment:row[7],statusChangedBy:changedBy,statusChangedAt:changedAt,statusHistory:history});
+    } else if (role === 'supervisor') {
+      const comment = tr.querySelector('[data-field="managerComment"]')?.value || '';
+      await updateRange(`H${rowNumber}:H${rowNumber}`, [comment]); existing.managerComment = comment;
+    } else if (role === 'employee') {
+      const status = tr.querySelector('[data-field="status"]')?.value || existing.status;
+      const comment = tr.querySelector('[data-field="employeeComment"]')?.value || '';
+      let changedBy = existing.statusChangedBy, changedAt = existing.statusChangedAt, history = existing.statusHistory || '';
+      if(status !== existing.status){
+        changedBy=currentUser.displayName; changedAt=new Date().toLocaleString('ru-RU',{timeZone:'Europe/Moscow'});
+        history=[history,`${changedAt} — ${changedBy}: ${existing.status} → ${status}`].filter(Boolean).join('\n');
+      }
+      await updateRange(`E${rowNumber}:E${rowNumber}`, [status]);
+      await updateRange(`I${rowNumber}:I${rowNumber}`, [comment]);
+      await updateRange(`L${rowNumber}:N${rowNumber}`, [changedBy,changedAt,history]);
+      Object.assign(existing,{status,employeeComment:comment,statusChangedBy:changedBy,statusChangedAt:changedAt,statusHistory:history});
+    }
+    dirtyRows.delete(String(rowNumber)); autoSaveTimers.delete(String(rowNumber)); tr.classList.remove('dirty-row');
+    setSaveState(dirtyRows.size ? `Осталось сохранить: ${dirtyRows.size}` : 'Все изменения сохранены', dirtyRows.size?'saving':'saved');
+    if(!silent){ const btn=tr.querySelector('[data-action="save"]'); if(btn){btn.textContent='Сохранено ✓';setTimeout(()=>btn.textContent='Сохранить',1200);} }
+  }catch(e){ console.error(e); setSaveState('Ошибка сохранения','error'); if(!silent) alert('Не удалось сохранить изменения.'); }
+}
+
 document.getElementById('taskBody').addEventListener('click', async (e) => {
   const btn = e.target.closest('button');
   if (!btn) return;
@@ -643,37 +770,7 @@ document.getElementById('taskBody').addEventListener('click', async (e) => {
   const role = currentUser.role;
 
   if (action === 'save') {
-    const isCreatorSupervisor = role === 'supervisor' && existing && existing.creator.trim().toLowerCase() === currentUser.displayName.trim().toLowerCase();
-    
-    if (role === 'admin' || role === 'manager' || isCreatorSupervisor) {
-      const values = {};
-      tr.querySelectorAll('[data-field]').forEach(el => values[el.dataset.field] = el.value);
-      // Поля, которых нет в форме текущей роли (скрытые как readonly), НЕ должны затираться —
-      // подставляем их прежнее значение из уже загруженных данных.
-      const safe = (field) => values[field] !== undefined ? values[field] : (existing ? existing[field] : '');
-      const row = [
-        safe('task'), safe('assignee'), safe('deadline'), safe('status'), safe('priority'),
-        safe('notes'), safe('managerComment'), safe('employeeComment')
-      ];
-      await updateRange(`B${rowNumber}:I${rowNumber}`, row);
-      if(existing) Object.assign(existing, {
-        task: row[0], assignee: row[1], deadline: row[2], status: row[3], priority: row[4],
-        notes: row[5], managerComment: row[6], employeeComment: row[7]
-      });
-    } else if (role === 'supervisor') {
-      const comment = tr.querySelector('[data-field="managerComment"]').value;
-      await updateRange(`H${rowNumber}:H${rowNumber}`, [comment]);
-      if(existing) existing.managerComment = comment;
-    } else if (role === 'employee') {
-      const status = tr.querySelector('[data-field="status"]').value;
-      const comment = tr.querySelector('[data-field="employeeComment"]').value;
-      await updateRange(`E${rowNumber}:E${rowNumber}`, [status]);
-      await updateRange(`I${rowNumber}:I${rowNumber}`, [comment]);
-      if(existing) { existing.status = status; existing.employeeComment = comment; }
-    }
-    btn.textContent = 'Сохранено ✓';
-    setTimeout(() => { loadTasks(); }, 800);
-
+    await saveTaskRow(tr, false);
   } else if (action === 'soft-delete') {
     if (confirm('Скрыть эту задачу для команды?')) {
       await updateRange(`J${rowNumber}:J${rowNumber}`, ['deleted_by_manager']);
@@ -738,13 +835,14 @@ document.getElementById('saveNewBtn').addEventListener('click', async () => {
     document.getElementById('newPriority').value,
     document.getElementById('newNotes').value,
     '', '', '', 
-    currentUser.displayName 
+    currentUser.displayName,
+    '', '', ''
   ];
   if (!row[1]){ alert('Впиши название задачи'); return; }
   try{
     await gapi.client.sheets.spreadsheets.values.append({
       spreadsheetId: CONFIG.SPREADSHEET_ID,
-      range: `${CONFIG.SHEET_NAME}!A:K`,
+      range: `${CONFIG.SHEET_NAME}!A:N`,
       valueInputOption: 'USER_ENTERED',
       insertDataOption: 'INSERT_ROWS',
       resource: { values: [row] },
@@ -772,6 +870,46 @@ document.getElementById('resetFiltersBtn').addEventListener('click', () => {
 });
 
 document.getElementById('refreshBtn').addEventListener('click', loadTasks);
+
+
+function getCurrentFilteredTasks(){
+  const fAssignee=filterAssignee.value,fStatus=filterStatus.value,fPriority=filterPriority.value,fCreator=filterCreator.value,fDeadline=filterDeadline.value;
+  return tasks.filter(t=>{
+    if(fAssignee&&t.assignee!==fAssignee)return false;if(fPriority&&t.priority!==fPriority)return false;if(fCreator&&t.creator!==fCreator)return false;if(fDeadline&&t.deadline!==fDeadline)return false;
+    if(fStatus){if(fStatus==='late')return isOverdue(t);if(fStatus==='deleted')return t.deleteMarker==='deleted_by_manager';return t.status===fStatus&&t.deleteMarker!=='deleted_by_manager';}return true;
+  });
+}
+function exportRows(){
+  const labels={todo:'К выполнению',progress:'В работе',done:'Готово'};
+  return getCurrentFilteredTasks().map(t=>({
+    'Дата составления':t.createdDate,'Задача':t.task,'Исполнитель':t.assignee,'Дедлайн':t.deadline,'Статус':isOverdue(t)?'Просрочено':(labels[t.status]||t.status),
+    'Приоритет':t.priority,'Комментарий менеджера':t.notes,'Комментарий руководителя':t.managerComment,'Комментарий сотрудника':t.employeeComment,'Кто поставил':t.creator,
+    'Статус изменил':t.statusChangedBy,'Когда изменён статус':t.statusChangedAt
+  }));
+}
+document.getElementById('saveAllBtn').addEventListener('click',async()=>{
+  if(isBulkSaving)return; isBulkSaving=true;
+  const rows=[...document.querySelectorAll('#taskBody tr[data-row]')].filter(tr=>dirtyRows.has(String(tr.dataset.row)));
+  if(!rows.length){setSaveState('Нет несохранённых изменений','saved');isBulkSaving=false;return;}
+  for(const tr of rows) await saveTaskRow(tr,true);
+  setSaveState('Все изменения быстро сохранены','saved'); isBulkSaving=false;
+});
+document.getElementById('exportExcelBtn').addEventListener('click',()=>{
+  const data=exportRows(); if(!data.length){alert('В текущей выборке нет задач.');return;}
+  const ws=XLSX.utils.json_to_sheet(data); const wb=XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb,ws,'Текущая выборка'); XLSX.writeFile(wb,'tasks-current-filter.xlsx');
+});
+document.getElementById('exportPdfBtn').addEventListener('click',()=>{
+  const data=exportRows(); if(!data.length){alert('В текущей выборке нет задач.');return;}
+  const labels=Object.keys(data[0]);
+  const rows=data.map(item=>`<tr>${labels.map(k=>`<td>${escapeHtml(item[k]||'')}</td>`).join('')}</tr>`).join('');
+  const win=window.open('','_blank');
+  if(!win){alert('Браузер заблокировал окно PDF. Разрешите всплывающие окна для этого сайта.');return;}
+  win.document.write(`<!DOCTYPE html><html lang="ru"><head><meta charset="UTF-8"><title>Текущая выборка задач</title><style>@page{size:A4 landscape;margin:8mm}body{font-family:Arial,sans-serif;color:#111}h1{font-size:18px}table{width:100%;border-collapse:collapse;font-size:8px}th,td{border:1px solid #bbb;padding:4px;vertical-align:top;word-break:break-word}th{background:#eee}small{color:#666}</style></head><body><h1>Текущая выборка задач</h1><small>Сформировано: ${new Date().toLocaleString('ru-RU')}</small><table><thead><tr>${labels.map(k=>`<th>${escapeHtml(k)}</th>`).join('')}</tr></thead><tbody>${rows}</tbody></table><script>window.onload=()=>{window.print();}<\/script></body></html>`);
+  win.document.close();
+});
+document.getElementById('mobileFilterToggle').addEventListener('click',()=>{
+  const bar=document.getElementById('filterBar'); const collapsed=bar.classList.toggle('mobile-collapsed'); document.getElementById('mobileFilterIcon').textContent=collapsed?'▶':'▼';
+});
 
 function escapeHtml(str){
   return String(str).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
