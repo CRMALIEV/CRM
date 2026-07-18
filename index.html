@@ -39,12 +39,27 @@
   
   /* Панель фильтров */
   .filter-panel-title { font-size: 12px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; }
-  .toolbar-filters { display: flex; gap: 10px; background: var(--card); border: 1px solid var(--line); padding: 14px; border-radius: 12px; margin-bottom: 16px; flex-wrap: wrap; align-items: center; }
+  .toolbar-filters { display: flex; gap: 10px; background: var(--card); border: 1px solid var(--line); padding: 14px; border-radius: 12px; margin-bottom: 16px; flex-wrap: wrap; align-items: flex-end; }
   .toolbar-filters select, .toolbar-filters input { padding: 7px 10px; border-radius: 8px; border: 1px solid var(--line); font-size: 13px; background: #fff; min-width: 140px; color: var(--ink); }
   .toolbar-filters select:hover, .toolbar-filters input:hover { border-color: var(--muted); }
   .filter-group { display: flex; flex-direction: column; gap: 4px; }
   .filter-group label { font-size: 11px; color: var(--muted); font-weight: 500; }
-  .toolbar-actions { display: flex; gap: 10px; margin-bottom: 16px; justify-content: flex-end; align-items: center; }
+
+  /* Кнопки действий находятся в одной строке с фильтрами справа */
+  .toolbar-actions {
+    display:flex;
+    gap:8px;
+    align-items:center;
+    justify-content:flex-end;
+    flex-wrap:wrap;
+    margin-left:auto;
+  }
+  .toolbar-actions button{white-space:nowrap;}
+  .toolbar-actions .saveState{
+    flex-basis:100%;
+    text-align:right;
+    min-width:0;
+  }
 
   .card{background:var(--card); border:1px solid var(--line); border-radius:12px; overflow:hidden; overflow-x:auto;}
   table{width:100%; border-collapse:collapse; font-size:13.5px; min-width:1500px; table-layout:fixed;}
@@ -120,8 +135,15 @@
     .toolbar-filters.mobile-collapsed{display:none;}
     .filter-group{min-width:100%;}
     .toolbar-filters select, .toolbar-filters input{width:100%; min-width:0; padding:10px;}
-    .toolbar-actions{justify-content:stretch;display:grid;grid-template-columns:1fr 1fr;gap:8px;}
-    .toolbar-actions button{width:100%;min-width:0;}
+    .toolbar-actions{
+      width:100%;
+      margin-left:0;
+      justify-content:stretch;
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:8px;
+    }
+    .toolbar-actions button{width:100%;min-width:0;white-space:normal;}
     .toolbar-actions .saveState{grid-column:1/-1;text-align:center;min-width:0;}
     .exportMenu{grid-column:1/-1;display:grid;grid-template-columns:1fr 1fr;}
 
@@ -216,21 +238,21 @@
         <input type="date" id="filterDeadline">
       </div>
       
-      <div class="filter-group" style="justify-content: flex-end; height: 44px;">
-        <button id="resetFiltersBtn" style="padding: 6px 12px;">Сбросить фильтры</button>
+      <div class="filter-group" style="justify-content:flex-end;">
+        <button id="resetFiltersBtn" style="padding:6px 12px;">Сбросить фильтры</button>
       </div>
-    </div>
 
-    <!-- Кнопки основных действий -->
-    <div class="toolbar-actions">
-      <button id="refreshBtn">Обновить базу данных</button>
-      <button id="saveAllBtn" class="primary">Быстро сохранить всё</button>
-      <div class="exportMenu">
-        <button id="exportExcelBtn">Выгрузить Excel</button>
-        <button id="exportPdfBtn">Выгрузить PDF</button>
+      <!-- Основные действия теперь находятся справа в этой же строке фильтров -->
+      <div class="toolbar-actions">
+        <button id="refreshBtn">Обновить базу данных</button>
+        <button id="saveAllBtn" class="primary">Быстро сохранить всё</button>
+        <div class="exportMenu">
+          <button id="exportExcelBtn">Выгрузить Excel</button>
+          <button id="exportPdfBtn">Выгрузить PDF</button>
+        </div>
+        <button id="showAddBtn" class="primary hidden">+ Новая задача</button>
+        <span id="saveState" class="saveState">Все изменения сохранены</span>
       </div>
-      <button id="showAddBtn" class="primary hidden">+ Новая задача</button>
-      <span id="saveState" class="saveState">Все изменения сохранены</span>
     </div>
     </div><!-- /stickyControls -->
 
