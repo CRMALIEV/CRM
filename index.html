@@ -52,7 +52,8 @@
   td{padding:10px 12px; border-bottom:1px solid var(--line); vertical-align:top; overflow-wrap:break-word; word-break:break-word;}
   tr:last-child td{border-bottom:none;}
   tr.deleted-row td{background:#FDF2F2; opacity:0.85;}
-  td input, td textarea, td select{width:100%; border:1px solid var(--line); background:#fff; font-family:inherit; font-size:13.5px; padding:4px 6px; border-radius:6px; color:var(--ink);}
+  td input, td textarea, td select{width:100%; border:1px solid var(--line); background:#fff; font-family:inherit; font-size:13.5px; padding:4px 6px; border-radius:6px; color:var(--ink); box-sizing:border-box;}
+  td select{overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
   td input:hover, td textarea:hover, td select:hover{border-color:var(--muted);}
   td input:focus, td textarea:focus, td select:focus{outline:none; border-color:var(--accent); background:#fff;}
   td .readonly{padding:5px 7px; color:var(--ink); border:1px solid var(--line); border-radius:6px; background:#FAFBFC; min-height:34px; display:block; overflow-wrap:break-word;}
@@ -86,7 +87,10 @@
   .saveState.saving{color:var(--amber);}
   .saveState.saved{color:var(--green);}
   .saveState.error{color:var(--red);}
-  .employeeTag{display:inline-flex;align-items:center;gap:7px;padding:5px 9px;border-radius:999px;font-weight:700;white-space:nowrap;}
+  .employeeTag{display:inline-flex;align-items:center;gap:7px;padding:5px 9px;border-radius:14px;font-weight:700;white-space:normal; line-height:1.3;}
+  .assigneeWrap{position:relative; display:block;}
+  .assigneeWrap .assigneeDisplay{display:inline-flex; width:100%; box-sizing:border-box;}
+  .assigneeWrap select.assigneeOverlay{position:absolute; inset:0; width:100%; height:100%; opacity:0; cursor:pointer; border:none; padding:0;}
   .employeeDot{width:9px;height:9px;border-radius:50%;background:currentColor;box-shadow:0 0 0 3px rgba(255,255,255,.7);}
   .statusHistory{font-size:11px;line-height:1.35;color:var(--muted);margin-top:5px;}
   .dirty-row{box-shadow:inset 4px 0 0 var(--amber);}
@@ -146,91 +150,6 @@
     #taskTable td input, #taskTable td select, #taskTable td textarea{text-align:right; font-size:14px;}
     #taskTable td .readonly{text-align:right; width:100%;}
   }
-
-
-  /* ===== FIX: исполнители и статусы никогда не перекрывают соседние колонки ===== */
-  /* На компьютере и планшете таблица не сжимается ниже безопасной ширины.
-     Если экран уже — появляется горизонтальная прокрутка внутри карточки. */
-  .card{
-    overflow-x:auto;
-    overflow-y:visible;
-    -webkit-overflow-scrolling:touch;
-  }
-  table{
-    min-width:1720px;
-  }
-
-  /* Даём исполнителю и статусу достаточно места */
-  #taskTable colgroup col:nth-child(3){width:12% !important;}
-  #taskTable colgroup col:nth-child(5){width:9% !important;}
-
-  /* Цветная плашка исполнителя переносится по словам и остаётся внутри ячейки */
-  .employeeTag{
-    display:flex;
-    width:100%;
-    max-width:100%;
-    min-width:0;
-    white-space:normal !important;
-    overflow-wrap:anywhere;
-    word-break:normal;
-    line-height:1.3;
-    border-radius:12px;
-    align-items:flex-start;
-  }
-  .employeeTag .employeeDot{
-    flex:0 0 9px;
-    margin-top:.28em;
-  }
-
-  /* Выпадающие списки не выходят за пределы своих ячеек */
-  td[data-label="Исполнитель"],
-  td[data-label="Статус"]{
-    min-width:0;
-    overflow:hidden;
-  }
-  td[data-label="Исполнитель"] select[data-field="assignee"]{
-    width:100%;
-    min-width:180px;
-    max-width:100%;
-  }
-  td[data-label="Статус"] select.statusSelect{
-    width:100%;
-    min-width:142px;
-    max-width:100%;
-    padding-right:30px;
-  }
-  td[data-label="Статус"] .pill{
-    display:inline-flex;
-    max-width:100%;
-    white-space:normal;
-    overflow-wrap:anywhere;
-    line-height:1.25;
-  }
-
-  /* На планшете таблица тоже не сжимается до 900px — это и вызывало нахлёст */
-  @media (min-width:761px) and (max-width:1200px){
-    table{min-width:1600px !important;}
-    .card{overflow-x:auto !important;}
-  }
-
-  /* На телефоне карточки занимают всю ширину, а поля переносятся вниз */
-  @media (max-width:760px){
-    table{min-width:0 !important;}
-    td[data-label="Исполнитель"],
-    td[data-label="Статус"]{overflow:visible;}
-    td[data-label="Исполнитель"] select[data-field="assignee"],
-    td[data-label="Статус"] select.statusSelect{
-      min-width:0;
-      width:100%;
-      max-width:100%;
-    }
-    .employeeTag{
-      justify-self:stretch;
-      width:100%;
-      border-radius:10px;
-    }
-  }
-
 </style>
 </head>
 <body>
@@ -318,15 +237,15 @@
     <div class="card">
       <table id="taskTable">
         <colgroup>
-          <col style="width:7%">   <!-- Дата составления -->
-          <col style="width:16%">  <!-- Задача -->
-          <col style="width:8%">   <!-- Исполнитель -->
+          <col style="width:6%">   <!-- Дата составления -->
+          <col style="width:15%">  <!-- Задача -->
+          <col style="width:11%">  <!-- Исполнитель -->
           <col style="width:7%">   <!-- Дедлайн -->
-          <col style="width:7%">   <!-- Статус -->
+          <col style="width:9%">   <!-- Статус -->
           <col style="width:6%">   <!-- Приоритет -->
-          <col style="width:11%">  <!-- Коммент. менеджера -->
-          <col style="width:11%">  <!-- Коммент. руководителя -->
-          <col style="width:11%">  <!-- Коммент. сотрудника -->
+          <col style="width:10%">  <!-- Коммент. менеджера -->
+          <col style="width:10%">  <!-- Коммент. руководителя -->
+          <col style="width:10%">  <!-- Коммент. сотрудника -->
           <col style="width:7%">   <!-- Кто поставил -->
           <col style="width:9%">   <!-- Управление -->
         </colgroup>
@@ -705,7 +624,10 @@ function renderTasks(){
         const opts = allTeamNames.map(n => `<option value="${escapeHtml(n)}" ${n===val?'selected':''}>${escapeHtml(n)}</option>`).join('');
         const extra = val && !allTeamNames.includes(val) ? `<option value="${escapeHtml(val)}" selected>${escapeHtml(val)}</option>` : '';
         const [bg,fg] = employeeColor(val);
-        return `<select data-field="assignee" style="background:${bg};color:${fg};font-weight:700"><option value="">—</option>${extra}${opts}</select>`;
+        return `<div class="assigneeWrap">
+          <span class="employeeTag assigneeDisplay" style="background:${bg};color:${fg}"><span class="employeeDot"></span>${escapeHtml(val || 'Не назначен')}</span>
+          <select data-field="assignee" class="assigneeOverlay" title="${escapeHtml(val)}"><option value="">—</option>${extra}${opts}</select>
+        </div>`;
       }
       if (name === 'priority') {
         return `
@@ -724,7 +646,7 @@ function renderTasks(){
     let statusCell = '';
     if (statusEditable) {
       statusCell = `
-        <select data-field="status" class="statusSelect status-${effectiveStatus}">
+        <select data-field="status" class="statusSelect status-${effectiveStatus}" title="${{todo:'К выполнению', progress:'В работе', done:'Готово', late:'Просрочено'}[effectiveStatus] || ''}">
           <option value="todo" ${t.status==='todo'?'selected':''}>К выполнению</option>
           <option value="progress" ${t.status==='progress'?'selected':''}>В работе</option>
           <option value="done" ${t.status==='done'?'selected':''}>Готово</option>
@@ -783,7 +705,16 @@ function renderTasks(){
     tr.querySelectorAll('[data-field]').forEach(el => {
       const evt = (el.tagName === 'SELECT' || el.type === 'date') ? 'change' : 'input';
       el.addEventListener(evt, () => {
-        if(el.dataset.field === 'assignee'){ const [bg,fg]=employeeColor(el.value); el.style.background=bg; el.style.color=fg; el.style.fontWeight='700'; }
+        if(el.dataset.field === 'assignee'){
+          const display = el.parentElement.querySelector('.assigneeDisplay');
+          if (display) {
+            const [bg,fg] = employeeColor(el.value);
+            display.style.background = bg;
+            display.style.color = fg;
+            display.innerHTML = `<span class="employeeDot"></span>${escapeHtml(el.value || 'Не назначен')}`;
+          }
+          el.title = el.value;
+        }
         scheduleAutoSave(tr);
       });
     });
