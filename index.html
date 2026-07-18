@@ -87,7 +87,10 @@
   .saveState.saving{color:var(--amber);}
   .saveState.saved{color:var(--green);}
   .saveState.error{color:var(--red);}
-  .employeeTag{display:inline-flex;align-items:center;gap:7px;padding:5px 9px;border-radius:999px;font-weight:700;white-space:nowrap;}
+  .employeeTag{display:inline-flex;align-items:center;gap:7px;padding:5px 9px;border-radius:14px;font-weight:700;white-space:normal; line-height:1.3;}
+  .assigneeWrap{position:relative; display:block;}
+  .assigneeWrap .assigneeDisplay{display:inline-flex; width:100%; box-sizing:border-box;}
+  .assigneeWrap select.assigneeOverlay{position:absolute; inset:0; width:100%; height:100%; opacity:0; cursor:pointer; border:none; padding:0;}
   .employeeDot{width:9px;height:9px;border-radius:50%;background:currentColor;box-shadow:0 0 0 3px rgba(255,255,255,.7);}
   .statusHistory{font-size:11px;line-height:1.35;color:var(--muted);margin-top:5px;}
   .dirty-row{box-shadow:inset 4px 0 0 var(--amber);}
@@ -621,7 +624,10 @@ function renderTasks(){
         const opts = allTeamNames.map(n => `<option value="${escapeHtml(n)}" ${n===val?'selected':''}>${escapeHtml(n)}</option>`).join('');
         const extra = val && !allTeamNames.includes(val) ? `<option value="${escapeHtml(val)}" selected>${escapeHtml(val)}</option>` : '';
         const [bg,fg] = employeeColor(val);
-        return `<select data-field="assignee" title="${escapeHtml(val)}" style="background:${bg};color:${fg};font-weight:700"><option value="">—</option>${extra}${opts}</select>`;
+        return `<div class="assigneeWrap">
+          <span class="employeeTag assigneeDisplay" style="background:${bg};color:${fg}"><span class="employeeDot"></span>${escapeHtml(val || 'Не назначен')}</span>
+          <select data-field="assignee" class="assigneeOverlay" title="${escapeHtml(val)}"><option value="">—</option>${extra}${opts}</select>
+        </div>`;
       }
       if (name === 'priority') {
         return `
@@ -699,7 +705,16 @@ function renderTasks(){
     tr.querySelectorAll('[data-field]').forEach(el => {
       const evt = (el.tagName === 'SELECT' || el.type === 'date') ? 'change' : 'input';
       el.addEventListener(evt, () => {
-        if(el.dataset.field === 'assignee'){ const [bg,fg]=employeeColor(el.value); el.style.background=bg; el.style.color=fg; el.style.fontWeight='700'; }
+        if(el.dataset.field === 'assignee'){
+          const display = el.parentElement.querySelector('.assigneeDisplay');
+          if (display) {
+            const [bg,fg] = employeeColor(el.value);
+            display.style.background = bg;
+            display.style.color = fg;
+            display.innerHTML = `<span class="employeeDot"></span>${escapeHtml(el.value || 'Не назначен')}`;
+          }
+          el.title = el.value;
+        }
         scheduleAutoSave(tr);
       });
     });
