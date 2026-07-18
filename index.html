@@ -33,9 +33,8 @@
   button:hover{background:var(--bg);}
   button.primary:hover{background:var(--accent); opacity:.92;}
   button.danger:hover{background:var(--red); color:#fff;}
-  main{max-width:1500px; margin:0 auto; padding:24px;}
-  #configNotice{background:var(--amber-soft); border:1px solid #EAD2AE; color:#7A4B10; padding:14px 16px; border-radius:10px; margin-bottom:20px; font-size:13px; line-height:1.5;}
-  #configNotice code{background:#fff; padding:1px 5px; border-radius:4px;}
+  main{width:96%; max-width:1900px; margin:0 auto; padding:24px;}
+  #stickyControls{position:sticky; z-index:4; background:var(--bg); padding-top:8px; margin-bottom:4px;}
   #accessDenied{background:var(--red-soft); border:1px solid #E7B9B2; color:var(--red); padding:18px; border-radius:10px; margin-bottom:20px; font-size:14px;}
   
   /* Панель фильтров */
@@ -48,30 +47,37 @@
   .toolbar-actions { display: flex; gap: 10px; margin-bottom: 16px; justify-content: flex-end; align-items: center; }
 
   .card{background:var(--card); border:1px solid var(--line); border-radius:12px; overflow:hidden; overflow-x:auto;}
-  table{width:100%; border-collapse:collapse; font-size:13.5px; min-width:1200px;}
-  th{text-align:left; padding:10px 12px; font-family:var(--mono); font-size:10.5px; text-transform:uppercase; letter-spacing:.6px; color:var(--muted); border-bottom:1px solid var(--line); background:#FAFBFC; white-space:nowrap;}
-  td{padding:10px 12px; border-bottom:1px solid var(--line); vertical-align:top;}
+  table{width:100%; border-collapse:collapse; font-size:13.5px; min-width:1500px; table-layout:fixed;}
+  th{text-align:left; padding:10px 12px; font-family:var(--mono); font-size:10.5px; text-transform:uppercase; letter-spacing:.6px; color:var(--muted); border-bottom:1px solid var(--line); background:#FAFBFC; white-space:normal; word-break:break-word;}
+  td{padding:10px 12px; border-bottom:1px solid var(--line); vertical-align:top; overflow-wrap:break-word; word-break:break-word;}
   tr:last-child td{border-bottom:none;}
   tr.deleted-row td{background:#FDF2F2; opacity:0.85;}
   td input, td textarea, td select{width:100%; border:1px solid var(--line); background:#fff; font-family:inherit; font-size:13.5px; padding:4px 6px; border-radius:6px; color:var(--ink);}
   td input:hover, td textarea:hover, td select:hover{border-color:var(--muted);}
   td input:focus, td textarea:focus, td select:focus{outline:none; border-color:var(--accent); background:#fff;}
-  td .readonly{padding:4px 6px; color:var(--ink); border:1px solid transparent;}
+  td .readonly{padding:5px 7px; color:var(--ink); border:1px solid var(--line); border-radius:6px; background:#FAFBFC; min-height:34px; display:block; overflow-wrap:break-word;}
+  td input:disabled, td textarea:disabled, td select:disabled{background:#F4F5F7; color:var(--muted); cursor:not-allowed;}
   .pill{display:inline-block; padding:2px 9px; border-radius:20px; font-size:12px; font-weight:600;}
   .pill.status-todo{background:var(--amber-soft); color:var(--amber);}
   .pill.status-progress{background:var(--accent-soft); color:var(--accent);}
   .pill.status-done{background:var(--green-soft); color:var(--green);}
   .pill.status-late{background:var(--red-soft); color:var(--red);}
   .pill.status-deleted{background:#F3F4F6; color:#4B5563; border:1px dashed #9CA3AF;}
-  select.statusSelect{cursor:pointer;}
-  .commentCell textarea{min-height:38px; resize:vertical;}
+  select.statusSelect{cursor:pointer; font-weight:600; border-width:1.5px;}
+  select.statusSelect.status-todo{background:var(--amber-soft); color:var(--amber); border-color:var(--amber);}
+  select.statusSelect.status-progress{background:var(--accent-soft); color:var(--accent); border-color:var(--accent);}
+  select.statusSelect.status-done{background:var(--green-soft); color:var(--green); border-color:var(--green);}
+  select.statusSelect.status-late{background:var(--red-soft); color:var(--red); border-color:var(--red);}
+  td textarea{min-height:40px; line-height:1.4; resize:none; overflow:hidden; overflow-wrap:break-word;}
+  .commentCell textarea{min-height:38px; resize:none; overflow:hidden;}
   .commentCell.manager.hasComment{background:var(--violet-soft); border-radius:8px;}
   .commentCell.employee.hasComment{background:var(--teal-soft); border-radius:8px;}
-  .rowActions{display:flex; gap:6px; white-space:nowrap;}
+  .commentCell.notes.hasComment{background:var(--amber-soft); border-radius:8px;}
+  .rowActions{display:flex; gap:6px; flex-wrap:wrap;}
   .rowActions button{padding:5px 9px; font-size:12px;}
   #addRow td{background:#FAFBFC;}
   #emptyState{padding:40px; text-align:center; color:var(--muted); font-size:14px;}
-  footer{max-width:1500px; margin:20px auto; padding:0 24px 40px; font-size:12px; color:var(--muted);}
+  footer{width:96%; max-width:1900px; margin:20px auto; padding:0 24px 40px; font-size:12px; color:var(--muted);}
   .deadline.overdue{color:var(--red); font-weight:600;}
   .hidden{display:none !important;}
 
@@ -141,18 +147,14 @@
 </header>
 
 <main>
-  <div id="configNotice">
-    Перед первым запуском впиши свои <code>CLIENT_ID</code>, <code>API_KEY</code> и <code>SPREADSHEET_ID</code>
-    в блоке <code>CONFIG</code> в конце этого файла. Убедитесь, что в таблице `Tasks` настроено 11 колонок.
-  </div>
-
   <div id="accessDenied" class="hidden">
     Твой email не найден в листе "Roles" этой таблицы. Попроси администратора добавить тебя туда.
   </div>
 
   <div id="appArea" class="hidden">
     
-    <!-- Панель мульти-фильтрации колонок -->
+    <!-- Панель мульти-фильтрации колонок + основные действия — зафиксированы при прокрутке -->
+    <div id="stickyControls">
     <div class="filter-panel-title" id="filterTitle">Фильтрация и поиск заявок</div>
     <div class="toolbar-filters" id="filterBar">
       <div class="filter-group">
@@ -202,9 +204,23 @@
       <button id="refreshBtn">Обновить базу данных</button>
       <button id="showAddBtn" class="primary hidden">+ Новая задача</button>
     </div>
+    </div><!-- /stickyControls -->
 
     <div class="card">
       <table id="taskTable">
+        <colgroup>
+          <col style="width:7%">   <!-- Дата составления -->
+          <col style="width:16%">  <!-- Задача -->
+          <col style="width:8%">   <!-- Исполнитель -->
+          <col style="width:7%">   <!-- Дедлайн -->
+          <col style="width:7%">   <!-- Статус -->
+          <col style="width:6%">   <!-- Приоритет -->
+          <col style="width:11%">  <!-- Коммент. менеджера -->
+          <col style="width:11%">  <!-- Коммент. руководителя -->
+          <col style="width:11%">  <!-- Коммент. сотрудника -->
+          <col style="width:7%">   <!-- Кто поставил -->
+          <col style="width:9%">   <!-- Управление -->
+        </colgroup>
         <thead>
           <tr id="headRow">
             <th data-label="Дата составления">Дата составления</th>
@@ -213,7 +229,7 @@
             <th data-label="Дедлайн">Дедлайн</th>
             <th data-label="Статус">Статус</th>
             <th data-label="Приоритет">Приоритет</th>
-            <th data-label="Заметки">Заметки</th>
+            <th data-label="Коммент. менеджера">Коммент. менеджера</th>
             <th data-label="Коммент. руководителя">Коммент. руководителя</th>
             <th data-label="Коммент. сотрудника">Коммент. сотрудника</th>
             <th data-label="Кто поставил">Кто поставил</th>
@@ -223,7 +239,7 @@
         <tbody id="taskBody">
           <tr id="addRow" class="hidden">
             <td data-label="Дата составления"><span id="autoCreatedDate" class="readonly" style="font-size:12px; color:var(--muted);">Авто</span></td>
-            <td data-label="Задача"><input id="newTask" placeholder="Что нужно сделать"></td>
+            <td data-label="Задача"><textarea id="newTask" rows="2" placeholder="Что нужно сделать"></textarea></td>
             <td data-label="Исполнитель"><select id="newAssignee"><option value="">Выбери исполнителя</option></select></td>
             <td data-label="Дедлайн"><input id="newDeadline" type="date"></td>
             <td data-label="Статус">
@@ -240,7 +256,7 @@
                 <option value="Низкий">Низкий</option>
               </select>
             </td>
-            <td data-label="Заметки"><input id="newNotes" placeholder="Комментарий"></td>
+            <td data-label="Коммент. менеджера"><input id="newNotes" placeholder="Комментарий менеджера"></td>
             <td data-label="Коммент. руководителя"></td>
             <td data-label="Коммент. сотрудника"></td>
             <td data-label="Кто поставил"><span id="autoAuthor" class="readonly" style="font-size:12px; color:var(--muted);">—</span></td>
@@ -346,20 +362,21 @@ async function onSignedIn(){
   const canCreate = ['admin', 'manager', 'supervisor'].includes(currentUser.role);
   document.getElementById('showAddBtn').classList.toggle('hidden', !canCreate);
   document.getElementById('autoAuthor').textContent = currentUser.displayName;
+
+  const canWriteManagerNote = (currentUser.role === 'admin' || currentUser.role === 'manager');
+  const newNotesEl = document.getElementById('newNotes');
+  newNotesEl.disabled = !canWriteManagerNote;
+  newNotesEl.placeholder = canWriteManagerNote ? 'Комментарий менеджера' : '(заполняет менеджер)';
   
-  // Для исполнителей скрываем общую панель фильтров
-  if (currentUser.role === 'employee') {
-    document.getElementById('filterBar').classList.add('hidden');
-    document.getElementById('filterTitle').classList.add('hidden');
-  } else {
-    document.getElementById('filterBar').classList.remove('hidden');
-    document.getElementById('filterTitle').classList.remove('hidden');
-  }
-  
+  // Панель фильтров теперь доступна всем ролям, включая сотрудника
+  document.getElementById('filterBar').classList.remove('hidden');
+  document.getElementById('filterTitle').classList.remove('hidden');
+
   document.getElementById('filterOptDeleted').classList.toggle('hidden', currentUser.role !== 'admin');
 
   await loadTeamNames();
   loadTasks();
+  updateStickyOffset();
 }
 
 async function loadTeamNames(){
@@ -513,6 +530,7 @@ function renderTasks(){
     const coreEditable = (role === 'admin' || role === 'manager' || isCreatorSupervisor) && t.deleteMarker !== 'deleted_by_manager';
     
     const statusEditable = (role === 'admin' || role === 'manager' || role === 'employee') && t.deleteMarker !== 'deleted_by_manager';
+    const notesEditable = (role === 'admin' || role === 'manager') && t.deleteMarker !== 'deleted_by_manager';
     const managerCommentEditable = (role === 'admin' || role === 'supervisor') && t.deleteMarker !== 'deleted_by_manager';
     const employeeCommentEditable = (role === 'admin' || role === 'employee') && t.deleteMarker !== 'deleted_by_manager';
 
@@ -536,13 +554,16 @@ function renderTasks(){
             <option value="Низкий" ${val==='Низкий'?'selected':''}>Низкий</option>
           </select>`;
       }
+      if (name === 'task') {
+        return `<textarea data-field="task" rows="2">${escapeHtml(val)}</textarea>`;
+      }
       return `<input value="${escapeHtml(val)}" data-field="${name}" ${type ? `type="${type}"` : ''} />`;
     };
 
     let statusCell = '';
     if (statusEditable) {
       statusCell = `
-        <select data-field="status" class="statusSelect">
+        <select data-field="status" class="statusSelect status-${effectiveStatus}">
           <option value="todo" ${t.status==='todo'?'selected':''}>К выполнению</option>
           <option value="progress" ${t.status==='progress'?'selected':''}>В работе</option>
           <option value="done" ${t.status==='done'?'selected':''}>Готово</option>
@@ -551,6 +572,10 @@ function renderTasks(){
       const statusLabels = {todo:'К выполнению', progress:'В работе', done:'Готово', late:'Просрочено', deleted:'Удалено менеджером'};
       statusCell = `<span class="pill status-${effectiveStatus}">${statusLabels[effectiveStatus] || effectiveStatus}</span>`;
     }
+
+    const notesCell = notesEditable
+      ? `<textarea data-field="notes" placeholder="Комментарий менеджера...">${escapeHtml(t.notes)}</textarea>`
+      : `<div class="readonly">${escapeHtml(t.notes)}</div>`;
 
     const managerCommentCell = managerCommentEditable
       ? `<textarea data-field="managerComment" placeholder="Коммент руководителя...">${escapeHtml(t.managerComment)}</textarea>`
@@ -562,20 +587,20 @@ function renderTasks(){
 
     let actionButtons = `<button data-action="save" class="primary">Сохранить</button>`;
     if (role === 'manager' && t.deleteMarker !== 'deleted_by_manager') {
-      actionButtons += ` <button data-action="soft-delete" class="danger">Удалить</button>`;
+      actionButtons += ` <button data-action="soft-delete" class="danger" title="Скрыть эту задачу от команды">🗑️</button>`;
     }
     if (role === 'admin') {
-      actionButtons += ` <button data-action="hard-delete" class="danger">Удалить навсегда</button>`;
+      actionButtons += ` <button data-action="hard-delete" class="danger" title="Удалить навсегда — без восстановления">🗑️❌</button>`;
     }
 
     tr.innerHTML = `
-      <td data-label="Дата составления"><div class="readonly" style="font-size:12px; font-weight:500; white-space:nowrap;">${escapeHtml(t.createdDate)}</div></td>
+      <td data-label="Дата составления"><div class="readonly" style="font-size:12px; font-weight:500;">${escapeHtml(t.createdDate)}</div></td>
       <td data-label="Задача">${field(t.task, 'task')}</td>
       <td data-label="Исполнитель">${field(t.assignee, 'assignee')}</td>
       <td data-label="Дедлайн">${field(t.deadline, 'deadline', 'date')}</td>
       <td data-label="Статус">${statusCell}</td>
       <td data-label="Приоритет">${field(t.priority, 'priority')}</td>
-      <td data-label="Заметки">${field(t.notes, 'notes')}</td>
+      <td data-label="Коммент. менеджера" class="commentCell notes ${t.notes ? 'hasComment' : ''}">${notesCell}</td>
       <td data-label="Коммент. руководителя" class="commentCell manager ${t.managerComment ? 'hasComment' : ''}">${managerCommentCell}</td>
       <td data-label="Коммент. сотрудника" class="commentCell employee ${t.employeeComment ? 'hasComment' : ''}">${employeeCommentCell}</td>
       <td data-label="Кто поставил"><div class="readonly" style="font-size:12px; font-weight:500;">${escapeHtml(t.creator)}</div></td>
@@ -583,8 +608,28 @@ function renderTasks(){
     `;
     tr.dataset.row = t.rowNumber;
     body.appendChild(tr);
+
+    // Автоматическая высота у всех текстовых полей — без внутреннего скролла и ползунков
+    tr.querySelectorAll('textarea').forEach(autosizeTextarea);
+
+    // Мгновенная подсветка цветом при выборе нового статуса, до сохранения
+    const statusSel = tr.querySelector('[data-field="status"]');
+    if (statusSel) {
+      statusSel.addEventListener('change', () => {
+        statusSel.className = 'statusSelect status-' + statusSel.value;
+      });
+    }
   });
   body.appendChild(addRow);
+}
+
+function autosizeTextarea(el){
+  el.style.height = 'auto';
+  el.style.height = (el.scrollHeight) + 'px';
+  if (!el.dataset.autosizeBound) {
+    el.addEventListener('input', () => autosizeTextarea(el));
+    el.dataset.autosizeBound = '1';
+  }
 }
 
 document.getElementById('taskBody').addEventListener('click', async (e) => {
@@ -668,7 +713,9 @@ async function updateRange(rangeSuffix, rowValues){
 
 document.getElementById('showAddBtn').addEventListener('click', () => {
   document.getElementById('addRow').classList.toggle('hidden');
+  autosizeTextarea(document.getElementById('newTask'));
 });
+document.getElementById('newTask').addEventListener('input', () => autosizeTextarea(document.getElementById('newTask')));
 
 document.getElementById('saveNewBtn').addEventListener('click', async () => {
   const now = new Date();
@@ -733,6 +780,15 @@ function escapeHtml(str){
 document.getElementById('loginBtn').disabled = true;
 gapiLoaded();
 gisLoaded();
+
+function updateStickyOffset(){
+  const header = document.querySelector('header');
+  const sticky = document.getElementById('stickyControls');
+  if (header && sticky) sticky.style.top = header.offsetHeight + 'px';
+}
+window.addEventListener('resize', updateStickyOffset);
+window.addEventListener('load', updateStickyOffset);
+updateStickyOffset();
 </script>
 </body>
 </html>
