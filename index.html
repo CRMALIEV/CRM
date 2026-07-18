@@ -63,7 +63,7 @@
   .pill.status-done{background:var(--green-soft); color:var(--green);}
   .pill.status-late{background:var(--red-soft); color:var(--red);}
   .pill.status-deleted{background:#F3F4F6; color:#4B5563; border:1px dashed #9CA3AF;}
-  select.statusSelect{cursor:pointer; font-weight:600; border-width:1.5px;}
+  select.statusSelect{cursor:pointer; font-weight:600; border-width:1.5px; min-width:115px;}
   select.statusSelect.status-todo{background:var(--amber-soft); color:var(--amber); border-color:var(--amber);}
   select.statusSelect.status-progress{background:var(--accent-soft); color:var(--accent); border-color:var(--accent);}
   select.statusSelect.status-done{background:var(--green-soft); color:var(--green); border-color:var(--green);}
@@ -86,8 +86,14 @@
   .saveState.saving{color:var(--amber);}
   .saveState.saved{color:var(--green);}
   .saveState.error{color:var(--red);}
-  .employeeTag{display:inline-flex;align-items:center;gap:7px;padding:5px 9px;border-radius:999px;font-weight:700;white-space:nowrap;}
+  .employeeTag{display:flex;align-items:flex-start;gap:7px;padding:5px 9px;border-radius:14px;font-weight:700;white-space:normal;overflow-wrap:anywhere;word-break:break-word;line-height:1.25;max-width:100%;min-width:0;}
   .employeeDot{width:9px;height:9px;border-radius:50%;background:currentColor;box-shadow:0 0 0 3px rgba(255,255,255,.7);}
+  #taskTable td[data-label="Исполнитель"],
+  #taskTable td[data-label="Статус"]{overflow:visible;}
+  #taskTable td[data-label="Исполнитель"] > *,
+  #taskTable td[data-label="Статус"] > *{max-width:100%;min-width:0;}
+  #taskTable td[data-label="Исполнитель"] select{white-space:normal;overflow-wrap:anywhere;word-break:break-word;}
+
   .statusHistory{font-size:11px;line-height:1.35;color:var(--muted);margin-top:5px;}
   .dirty-row{box-shadow:inset 4px 0 0 var(--amber);}
   .exportMenu{display:flex;gap:8px;flex-wrap:wrap;}
@@ -145,6 +151,50 @@
     #taskTable td.rowActions button{width:100%;}
     #taskTable td input, #taskTable td select, #taskTable td textarea{text-align:right; font-size:14px;}
     #taskTable td .readonly{text-align:right; width:100%;}
+
+    /* Длинные ФИО и статусы: всегда переносятся и не заходят на соседние поля */
+    #taskTable td[data-label="Исполнитель"],
+    #taskTable td[data-label="Статус"]{
+      align-items:start;
+    }
+    #taskTable td[data-label="Исполнитель"] .employeeTag{
+      width:100%;
+      justify-content:flex-start;
+      text-align:left;
+      white-space:normal;
+      overflow-wrap:anywhere;
+      word-break:break-word;
+      line-height:1.3;
+      border-radius:12px;
+    }
+    #taskTable td[data-label="Исполнитель"] select,
+    #taskTable td[data-label="Статус"] select{
+      width:100%;
+      min-width:0;
+      max-width:100%;
+      text-align:left;
+      white-space:normal;
+      overflow:hidden;
+      text-overflow:ellipsis;
+      padding-right:30px;
+    }
+    #taskTable td[data-label="Статус"] .pill{
+      display:block;
+      width:100%;
+      max-width:100%;
+      white-space:normal;
+      overflow-wrap:anywhere;
+      word-break:break-word;
+      line-height:1.3;
+      text-align:left;
+      border-radius:12px;
+      padding:7px 9px;
+    }
+    #taskTable td[data-label="Статус"] .statusHistory{
+      text-align:left;
+      overflow-wrap:anywhere;
+      word-break:break-word;
+    }
   }
 </style>
 </head>
