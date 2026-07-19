@@ -22,6 +22,9 @@
   header .eyebrow{font-family:var(--mono); font-size:11px; color:var(--muted); letter-spacing:1px; text-transform:uppercase;}
   #authArea{display:flex; align-items:center; gap:10px; flex-wrap:wrap;}
   #userEmail{font-size:13px; color:var(--muted);}
+  .loginForm{display:flex; gap:8px; align-items:center;}
+  .loginForm input{padding:7px 10px; border-radius:8px; border:1px solid var(--line); font-size:13px; width:130px;}
+  .loginError{font-size:12px; color:var(--red); max-width:220px;}
   .roleBadge{font-family:var(--mono); font-size:10.5px; padding:3px 9px; border-radius:20px; text-transform:uppercase; letter-spacing:.5px; font-weight:700;}
   .roleBadge.admin{background:var(--accent-soft); color:var(--accent);}
   .roleBadge.manager{background:var(--violet-soft); color:var(--violet);}
@@ -39,85 +42,14 @@
   
   /* Панель фильтров */
   .filter-panel-title { font-size: 12px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; }
-  .toolbar-filters {
-    display:flex;
-    gap:8px;
-    background:var(--card);
-    border:1px solid var(--line);
-    padding:10px 12px;
-    border-radius:12px;
-    margin-bottom:12px;
-    flex-wrap:nowrap;
-    align-items:flex-end;
-    width:100%;
-    overflow-x:auto;
-    scrollbar-width:thin;
-  }
-  .toolbar-filters select,
-  .toolbar-filters input {
-    padding:6px 8px;
-    height:34px;
-    border-radius:7px;
-    border:1px solid var(--line);
-    font-size:12px;
-    background:#fff;
-    min-width:0;
-    color:var(--ink);
-  }
+  .toolbar-filters { display: flex; gap: 10px; background: var(--card); border: 1px solid var(--line); padding: 14px; border-radius: 12px; margin-bottom: 16px; flex-wrap: wrap; align-items: center; }
+  .toolbar-filters select, .toolbar-filters input { padding: 7px 10px; border-radius: 8px; border: 1px solid var(--line); font-size: 13px; background: #fff; min-width: 140px; color: var(--ink); }
   .toolbar-filters select:hover, .toolbar-filters input:hover { border-color: var(--muted); }
-  .filter-group{
-    display:flex;
-    flex-direction:column;
-    gap:3px;
-    flex:0 0 auto;
-  }
-  .filter-group label{
-    font-size:10px;
-    color:var(--muted);
-    font-weight:600;
-    white-space:nowrap;
-  }
-
-  /* Компактные размеры фильтров */
-  .filter-group:nth-of-type(1){width:170px;}
-  .filter-group:nth-of-type(2){width:135px;}
-  .filter-group:nth-of-type(3){width:120px;}
-  .filter-group:nth-of-type(4){width:120px;}
-  .filter-group:nth-of-type(5){width:135px;}
-  .filter-group:nth-of-type(6){width:auto;}
-
-  /* Кнопки действий в той же строке справа */
-  .toolbar-actions{
-    display:flex;
-    gap:6px;
-    align-items:flex-end;
-    justify-content:flex-end;
-    flex-wrap:nowrap;
-    margin-left:auto;
-    flex:0 0 auto;
-  }
-  .toolbar-actions button{
-    white-space:nowrap;
-    height:34px;
-    padding:6px 10px;
-    font-size:12px;
-    border-radius:7px;
-  }
-  .toolbar-actions .exportMenu{
-    display:flex;
-    gap:6px;
-    flex-wrap:nowrap;
-  }
-  .toolbar-actions .saveState{
-    position:absolute;
-    right:14px;
-    bottom:5px;
-    font-size:10px;
-    text-align:right;
-    min-width:0;
-    pointer-events:none;
-  }
-  .toolbar-filters{position:relative;padding-bottom:24px;}
+  .filter-group { display: flex; flex-direction: column; gap: 4px; }
+  .filter-group label { font-size: 11px; color: var(--muted); font-weight: 500; }
+  .filterAndActionsRow{display:flex; align-items:flex-start; gap:12px; flex-wrap:wrap;}
+  .filterAndActionsRow .toolbar-filters{flex:1 1 auto; margin-bottom:0;}
+  .toolbar-actions { display: flex; gap: 10px; margin-left: auto; align-items: center; flex-wrap: wrap; flex-shrink:0; }
 
   .card{background:var(--card); border:1px solid var(--line); border-radius:12px; overflow:hidden; overflow-x:auto;}
   table{width:100%; border-collapse:collapse; font-size:13.5px; min-width:1500px; table-layout:fixed;}
@@ -169,19 +101,6 @@
   .dirty-row{box-shadow:inset 4px 0 0 var(--amber);}
   .exportMenu{display:flex;gap:8px;flex-wrap:wrap;}
   .mobile-filter-toggle{display:none;width:100%;justify-content:space-between;align-items:center;margin-bottom:8px;}
-  .reset-filter-group button{
-    height:34px;
-    padding:6px 9px;
-    font-size:12px;
-    white-space:nowrap;
-  }
-
-  @media (max-width: 1450px){
-    .toolbar-filters{flex-wrap:wrap;overflow-x:visible;}
-    .toolbar-actions{margin-left:0;}
-    .toolbar-actions .saveState{position:static;align-self:center;margin-left:4px;}
-    .toolbar-filters{padding-bottom:10px;}
-  }
 
   /* ===================== АДАПТИВНОСТЬ ===================== */
 
@@ -201,35 +120,14 @@
     button{padding:10px 14px; font-size:14px;} /* крупнее для пальца */
 
     #stickyControls{position:static !important;top:auto !important;padding-top:0;}
+    .filterAndActionsRow{flex-direction:column;}
     .mobile-filter-toggle{display:flex;}
-    .toolbar-filters{
-      padding:12px;
-      max-height:none;
-      overflow:visible;
-      flex-wrap:wrap;
-      align-items:stretch;
-    }
+    .toolbar-filters{padding:12px;max-height:none;overflow:visible;}
     .toolbar-filters.mobile-collapsed{display:none;}
-    .filter-group,
-    .filter-group:nth-of-type(1),
-    .filter-group:nth-of-type(2),
-    .filter-group:nth-of-type(3),
-    .filter-group:nth-of-type(4),
-    .filter-group:nth-of-type(5),
-    .filter-group:nth-of-type(6){
-      width:100%;
-      min-width:100%;
-    }
+    .filter-group{min-width:100%;}
     .toolbar-filters select, .toolbar-filters input{width:100%; min-width:0; padding:10px;}
-    .toolbar-actions{
-      width:100%;
-      margin-left:0;
-      justify-content:stretch;
-      display:grid;
-      grid-template-columns:1fr 1fr;
-      gap:8px;
-    }
-    .toolbar-actions button{width:100%;min-width:0;white-space:normal;}
+    .toolbar-actions{justify-content:stretch;display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+    .toolbar-actions button{width:100%;min-width:0;}
     .toolbar-actions .saveState{grid-column:1/-1;text-align:center;min-width:0;}
     .exportMenu{grid-column:1/-1;display:grid;grid-template-columns:1fr 1fr;}
 
@@ -270,14 +168,19 @@
   <div id="authArea">
     <span id="roleBadge" class="roleBadge hidden"></span>
     <span id="userEmail"></span>
-    <button id="loginBtn" class="primary">Войти через Google</button>
+    <form id="loginForm" class="loginForm">
+      <input id="loginUsername" placeholder="Логин" autocomplete="username" required>
+      <input id="loginPassword" type="password" placeholder="Пароль" autocomplete="current-password" required>
+      <button id="loginBtn" class="primary" type="submit">Войти</button>
+    </form>
+    <span id="loginError" class="loginError hidden"></span>
     <button id="logoutBtn" class="hidden">Выйти</button>
   </div>
 </header>
 
 <main>
   <div id="accessDenied" class="hidden">
-    Твой email не найден в листе "Roles" этой таблицы. Попроси администратора добавить тебя туда.
+    Доступ заблокирован. Обратись к администратору.
   </div>
 
   <div id="appArea" class="hidden">
@@ -286,6 +189,7 @@
     <div id="stickyControls">
     <button id="mobileFilterToggle" class="mobile-filter-toggle"><span>Фильтры и поиск</span><span id="mobileFilterIcon">▼</span></button>
     <div class="filter-panel-title" id="filterTitle">Фильтрация и поиск заявок</div>
+    <div class="filterAndActionsRow">
     <div class="toolbar-filters" id="filterBar">
       <div class="filter-group">
         <label>Исполнитель</label>
@@ -324,22 +228,23 @@
         <input type="date" id="filterDeadline">
       </div>
       
-      <div class="filter-group reset-filter-group" style="justify-content:flex-end;">
-        <button id="resetFiltersBtn">Сбросить</button>
-      </div>
-
-      <!-- Основные действия теперь находятся справа в этой же строке фильтров -->
-      <div class="toolbar-actions">
-        <button id="refreshBtn">Обновить базу данных</button>
-        <button id="saveAllBtn" class="primary">Быстро сохранить всё</button>
-        <div class="exportMenu">
-          <button id="exportExcelBtn">Выгрузить Excel</button>
-          <button id="exportPdfBtn">Выгрузить PDF</button>
-        </div>
-        <button id="showAddBtn" class="primary hidden">+ Новая задача</button>
-        <span id="saveState" class="saveState">Все изменения сохранены</span>
+      <div class="filter-group" style="justify-content: flex-end; height: 44px;">
+        <button id="resetFiltersBtn" style="padding: 6px 12px;">Сбросить фильтры</button>
       </div>
     </div>
+
+    <!-- Кнопки основных действий — в одной строке с панелью фильтров, справа -->
+    <div class="toolbar-actions">
+      <button id="refreshBtn">Обновить базу данных</button>
+      <button id="saveAllBtn" class="primary">Быстро сохранить всё</button>
+      <div class="exportMenu">
+        <button id="exportExcelBtn">Выгрузить Excel</button>
+        <button id="exportPdfBtn">Выгрузить PDF</button>
+      </div>
+      <button id="showAddBtn" class="primary hidden">+ Новая задача</button>
+      <span id="saveState" class="saveState">Все изменения сохранены</span>
+    </div>
+    </div><!-- /filterAndActionsRow -->
     </div><!-- /stickyControls -->
 
     <div class="card">
@@ -409,107 +314,98 @@
   Все данные хранятся в твоей собственной Google Таблице.
 </footer>
 
-<script src="https://apis.google.com/js/api.js"></script>
-<script src="https://accounts.google.com/gsi/client"></script>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <script>
-// ======================= НАСТРОЙКИ (заполни своими значениями) =======================
+// ======================= НАСТРОЙКИ =======================
 const CONFIG = {
-  CLIENT_ID: '675414803178-r4hn8mc8h9jha3eh0qhpd8f5gkofrbq7.apps.googleusercontent.com',
-  API_KEY: 'AIzaSyBBoyWanWwQrGs6MZL-8T6vX5SoDnotT2w',
-  SPREADSHEET_ID: '1yvP4CL2p_k-AW8l37Lzy5FpOsgelcJ_BN81m8QVSBuw',
-  SHEET_NAME: 'Tasks',
-  ROLES_SHEET_NAME: 'Roles',
-  SCOPES: 'https://www.googleapis.com/auth/spreadsheets https://www.googleapis.com/auth/userinfo.email'
+  APPS_SCRIPT_URL: 'https://script.google.com/macros/s/AKfycbyagGZUhxnfRIiSwyAYZuGgpoTN0z1fxOWdsJbf6RrHsJ6cOw81bo4Cuh4RMTypKxFMcg/exec' // .../exec, из Apps Script → Развернуть
 };
-// =======================================================================================
+// ===========================================================
 
-let tokenClient;
-let gapiInited = false;
-let gisInited = false;
 let tasks = []; // + statusChangedBy, statusChangedAt, statusHistory
-let currentUser = null; // {email, role, name}
+let currentUser = null; // {username, password, role, name, displayName}
 let allTeamNames = [];
-let tasksSheetId = null; // числовой ID листа Tasks, нужен для настоящего удаления строки
 let dirtyRows = new Set();
 let autoSaveTimers = new Map();
 let isBulkSaving = false;
 
-async function getTasksSheetId(){
-  if (tasksSheetId !== null) return tasksSheetId;
-  try{
-    const res = await gapi.client.sheets.spreadsheets.get({
-      spreadsheetId: CONFIG.SPREADSHEET_ID,
-      fields: 'sheets.properties'
-    });
-    const sheet = res.result.sheets.find(s => s.properties.title === CONFIG.SHEET_NAME);
-    tasksSheetId = sheet ? sheet.properties.sheetId : 0;
-    return tasksSheetId;
-  } catch(e){ console.error('Не удалось определить ID листа Tasks', e); return 0; }
-}
-
-async function ensureTechnicalHeaders(){
-  try{
-    await gapi.client.sheets.spreadsheets.values.update({
-      spreadsheetId: CONFIG.SPREADSHEET_ID,
-      range: `${CONFIG.SHEET_NAME}!L1:N1`,
-      valueInputOption: 'RAW',
-      resource: { values: [['Статус изменил','Когда изменён статус','История статусов']] }
-    });
-  }catch(e){ console.warn('Не удалось создать технические заголовки истории статусов',e); }
-}
-
-function gapiLoaded(){
-  gapi.load('client', async () => {
-    await gapi.client.init({
-      apiKey: CONFIG.API_KEY,
-      discoveryDocs: ['https://sheets.googleapis.com/$discovery/rest?version=v4'],
-    });
-    gapiInited = true;
-    maybeEnable();
+// Единая функция обращения к серверу. При каждом запросе (кроме входа)
+// передаём логин/пароль — сервер сам заново проверяет их и статус сотрудника,
+// поэтому отдельные токены и их отзыв не нужны: удалил/сменил пароль → доступ обрывается сразу.
+async function apiCall(action, params){
+  const payload = Object.assign({ action }, params || {});
+  if (currentUser){
+    payload.username = currentUser.username;
+    payload.password = currentUser.password;
+  }
+  const res = await fetch(CONFIG.APPS_SCRIPT_URL, {
+    method: 'POST',
+    // Без Content-Type: application/json — иначе браузер отправит preflight-запрос,
+    // который Google Apps Script не умеет обрабатывать.
+    body: JSON.stringify(payload)
   });
+  return res.json();
 }
 
-function gisLoaded(){
-  tokenClient = google.accounts.oauth2.initTokenClient({
-    client_id: CONFIG.CLIENT_ID,
-    scope: CONFIG.SCOPES,
-    callback: (resp) => {
-      if (resp.error) { console.error(resp); return; }
-      onSignedIn();
-    },
-  });
-  gisInited = true;
-  maybeEnable();
-}
+document.getElementById('loginForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const username = document.getElementById('loginUsername').value.trim();
+  const password = document.getElementById('loginPassword').value;
+  const errEl = document.getElementById('loginError');
+  errEl.classList.add('hidden');
+  if (!username || !password) return;
 
-function maybeEnable(){
-  if (gapiInited && gisInited) document.getElementById('loginBtn').disabled = false;
-}
+  document.getElementById('loginBtn').disabled = true;
+  document.getElementById('loginBtn').textContent = 'Входим…';
+  try{
+    const resp = await fetch(CONFIG.APPS_SCRIPT_URL, {
+      method: 'POST',
+      body: JSON.stringify({ action: 'login', username, password })
+    });
+    const data = await resp.json();
+    if (!data.ok){
+      errEl.textContent = data.error || 'Не удалось войти';
+      errEl.classList.remove('hidden');
+      return;
+    }
+    currentUser = { username, password, role: data.role, name: data.name };
+    currentUser.displayName = currentUser.name || currentUser.username;
+    onSignedIn();
+  } catch(err){
+    errEl.textContent = 'Нет связи с сервером. Проверь адрес APPS_SCRIPT_URL и подключение к интернету.';
+    errEl.classList.remove('hidden');
+  } finally {
+    document.getElementById('loginBtn').disabled = false;
+    document.getElementById('loginBtn').textContent = 'Войти';
+  }
+});
+
+document.getElementById('logoutBtn').addEventListener('click', () => {
+  currentUser = null; tasks = [];
+  document.getElementById('loginForm').classList.remove('hidden');
+  document.getElementById('logoutBtn').classList.add('hidden');
+  document.getElementById('roleBadge').classList.add('hidden');
+  document.getElementById('userEmail').textContent = '';
+  document.getElementById('appArea').classList.add('hidden');
+  document.getElementById('loginUsername').value = '';
+  document.getElementById('loginPassword').value = '';
+});
 
 async function onSignedIn(){
-  document.getElementById('loginBtn').classList.add('hidden');
+  document.getElementById('loginForm').classList.add('hidden');
+  document.getElementById('loginError').classList.add('hidden');
   document.getElementById('logoutBtn').classList.remove('hidden');
-  const email = await fetchProfileEmail();
-  document.getElementById('userEmail').textContent = email || '';
-  const role = await resolveRole(email);
-  if (!role){
-    document.getElementById('accessDenied').classList.remove('hidden');
-    document.getElementById('appArea').classList.add('hidden');
-    return;
-  }
-  currentUser = role;
-  currentUser.displayName = currentUser.name || currentUser.email; // подстраховка: если имя не вписано в Roles, используем email
+  document.getElementById('userEmail').textContent = currentUser.displayName;
   document.getElementById('accessDenied').classList.add('hidden');
-  
+
   const badge = document.getElementById('roleBadge');
   const roleLabels = {admin:'Директор / Админ', manager:'Менеджер', supervisor:'Руководитель', employee:'Сотрудник'};
   badge.textContent = roleLabels[currentUser.role] || currentUser.role;
   badge.className = 'roleBadge ' + currentUser.role;
   badge.classList.remove('hidden');
-  
+
   document.getElementById('appArea').classList.remove('hidden');
-  
+
   const canCreate = ['admin', 'manager', 'supervisor'].includes(currentUser.role);
   document.getElementById('showAddBtn').classList.toggle('hidden', !canCreate);
   document.getElementById('autoAuthor').textContent = currentUser.displayName;
@@ -518,14 +414,13 @@ async function onSignedIn(){
   const newNotesEl = document.getElementById('newNotes');
   newNotesEl.disabled = !canWriteManagerNote;
   newNotesEl.placeholder = canWriteManagerNote ? 'Комментарий менеджера' : '(заполняет менеджер)';
-  
-  // Панель фильтров теперь доступна всем ролям, включая сотрудника
+
+  // Панель фильтров доступна всем ролям, включая сотрудника
   document.getElementById('filterBar').classList.remove('hidden');
   document.getElementById('filterTitle').classList.remove('hidden');
 
   document.getElementById('filterOptDeleted').classList.toggle('hidden', currentUser.role !== 'admin');
 
-  await ensureTechnicalHeaders();
   await loadTeamNames();
   loadTasks();
   updateStickyOffset();
@@ -533,14 +428,8 @@ async function onSignedIn(){
 
 async function loadTeamNames(){
   try{
-    const res = await gapi.client.sheets.spreadsheets.values.get({
-      spreadsheetId: CONFIG.SPREADSHEET_ID,
-      range: `${CONFIG.ROLES_SHEET_NAME}!A2:C`,
-    });
-    const rows = res.result.values || [];
-    allTeamNames = rows
-      .filter(r => (r[2] || '').trim())
-      .map(r => r[2].trim());
+    const data = await apiCall('getTeamNames');
+    allTeamNames = (data.names || []).map(n => n.trim()).filter(Boolean);
     populateNewAssigneeSelect();
   } catch(e){ console.warn('Не удалось загрузить список команды', e); }
 }
@@ -552,74 +441,21 @@ function populateNewAssigneeSelect(){
     allTeamNames.map(n => `<option value="${escapeHtml(n)}">${escapeHtml(n)}</option>`).join('');
 }
 
-async function fetchProfileEmail(){
-  try{
-    const token = gapi.client.getToken();
-    const res = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
-      headers: { Authorization: 'Bearer ' + token.access_token }
-    });
-    const data = await res.json();
-    return data.email || '';
-  } catch(e){ console.warn('Не удалось получить профиль', e); return ''; }
-}
-
-async function resolveRole(email){
-  try{
-    const res = await gapi.client.sheets.spreadsheets.values.get({
-      spreadsheetId: CONFIG.SPREADSHEET_ID,
-      range: `${CONFIG.ROLES_SHEET_NAME}!A2:C`,
-    });
-    const rows = res.result.values || [];
-    const match = rows.find(r => (r[0] || '').trim().toLowerCase() === email.trim().toLowerCase());
-    if (!match) return null;
-    return { email, role: (match[1] || 'employee').trim().toLowerCase(), name: (match[2] || '').trim() };
-  } catch(e){ return null; }
-}
-
-document.getElementById('loginBtn').addEventListener('click', () => {
-  tokenClient.requestAccessToken({prompt: 'consent'});
-});
-
-document.getElementById('logoutBtn').addEventListener('click', () => {
-  const token = gapi.client.getToken();
-  if (token !== null){ google.accounts.oauth2.revoke(token.access_token); gapi.client.setToken(''); }
-  document.getElementById('loginBtn').classList.remove('hidden');
-  document.getElementById('logoutBtn').classList.add('hidden');
-  document.getElementById('roleBadge').classList.add('hidden');
-  document.getElementById('userEmail').textContent = '';
-  document.getElementById('appArea').classList.add('hidden');
-  tasks = []; currentUser = null;
-});
-
 async function loadTasks(){
-  const range = `${CONFIG.SHEET_NAME}!A2:N`;
   try{
-    const res = await gapi.client.sheets.spreadsheets.values.get({
-      spreadsheetId: CONFIG.SPREADSHEET_ID, range,
-    });
-    const rows = res.result.values || [];
-    
-    let allTasks = rows.map((r, i) => ({
-      rowNumber: i + 2,
-      createdDate: r[0] || 'Не указана',
-      task: r[1] || '', assignee: r[2] || '', deadline: r[3] || '',
-      status: r[4] || 'todo', priority: r[5] || 'Обычный', notes: r[6] || '',
-      managerComment: r[7] || '', employeeComment: r[8] || '',
-      deleteMarker: r[9] || '',
-      creator: r[10] || 'Не указан',
-      statusChangedBy: r[11] || '',
-      statusChangedAt: r[12] || '',
-      statusHistory: r[13] || ''
-    }));
-
-    if (currentUser.role === 'admin') {
-      tasks = allTasks;
-    } else {
-      tasks = allTasks.filter(t => t.deleteMarker !== 'deleted_by_manager');
-      if (currentUser.role === 'employee') {
-        tasks = tasks.filter(t => t.assignee.trim().toLowerCase() === currentUser.name.trim().toLowerCase());
+    const data = await apiCall('getTasks');
+    if (!data.ok){
+      if (data.error && data.error.includes('заблокирован')){
+        document.getElementById('accessDenied').classList.remove('hidden');
+        document.getElementById('appArea').classList.add('hidden');
+        return;
       }
+      alert(data.error || 'Ошибка загрузки данных.');
+      return;
     }
+    // Сервер уже отфильтровал задачи по роли (сотрудник видит только свои,
+    // остальные — без скрытых менеджером), поэтому просто принимаем список как есть.
+    tasks = data.tasks;
 
     populateDynamicFilters();
     renderTasks();
@@ -847,39 +683,23 @@ async function saveTaskRow(tr, silent=false){
   const isCreatorSupervisor = role === 'supervisor' && existing.creator.trim().toLowerCase() === currentUser.displayName.trim().toLowerCase();
   try{
     setSaveState('Сохраняю изменения…','saving');
+    let fields = {};
     if (role === 'admin' || role === 'manager' || isCreatorSupervisor) {
-      const values = {};
-      tr.querySelectorAll('[data-field]').forEach(el => values[el.dataset.field] = el.value);
-      const safe = field => values[field] !== undefined ? values[field] : existing[field];
-      const newStatus = safe('status');
-      let changedBy = existing.statusChangedBy, changedAt = existing.statusChangedAt, history = existing.statusHistory || '';
-      if(newStatus !== existing.status){
-        changedBy = currentUser.displayName;
-        changedAt = new Date().toLocaleString('ru-RU',{timeZone:'Europe/Moscow'});
-        history = [history, `${changedAt} — ${changedBy}: ${existing.status} → ${newStatus}`].filter(Boolean).join('\n');
-      }
-      const row = [safe('task'),safe('assignee'),safe('deadline'),newStatus,safe('priority'),safe('notes'),safe('managerComment'),safe('employeeComment'),existing.deleteMarker,existing.creator,changedBy,changedAt,history];
-      await updateRange(`B${rowNumber}:N${rowNumber}`, row);
-      Object.assign(existing,{task:row[0],assignee:row[1],deadline:row[2],status:row[3],priority:row[4],notes:row[5],managerComment:row[6],employeeComment:row[7],statusChangedBy:changedBy,statusChangedAt:changedAt,statusHistory:history});
+      tr.querySelectorAll('[data-field]').forEach(el => fields[el.dataset.field] = el.value);
     } else if (role === 'supervisor') {
-      const comment = tr.querySelector('[data-field="managerComment"]')?.value || '';
-      await updateRange(`H${rowNumber}:H${rowNumber}`, [comment]); existing.managerComment = comment;
+      fields.managerComment = tr.querySelector('[data-field="managerComment"]')?.value || '';
     } else if (role === 'employee') {
-      const status = tr.querySelector('[data-field="status"]')?.value || existing.status;
-      const comment = tr.querySelector('[data-field="employeeComment"]')?.value || '';
-      let changedBy = existing.statusChangedBy, changedAt = existing.statusChangedAt, history = existing.statusHistory || '';
-      if(status !== existing.status){
-        changedBy=currentUser.displayName; changedAt=new Date().toLocaleString('ru-RU',{timeZone:'Europe/Moscow'});
-        history=[history,`${changedAt} — ${changedBy}: ${existing.status} → ${status}`].filter(Boolean).join('\n');
-      }
-      await updateRange(`E${rowNumber}:E${rowNumber}`, [status]);
-      await updateRange(`I${rowNumber}:I${rowNumber}`, [comment]);
-      await updateRange(`L${rowNumber}:N${rowNumber}`, [changedBy,changedAt,history]);
-      Object.assign(existing,{status,employeeComment:comment,statusChangedBy:changedBy,statusChangedAt:changedAt,statusHistory:history});
+      fields.status = tr.querySelector('[data-field="status"]')?.value || existing.status;
+      fields.employeeComment = tr.querySelector('[data-field="employeeComment"]')?.value || '';
     }
+    const data = await apiCall('updateTask', { rowNumber, fields });
+    if (!data.ok) throw new Error(data.error || 'Ошибка сохранения');
+    Object.assign(existing, fields);
+
     dirtyRows.delete(String(rowNumber)); autoSaveTimers.delete(String(rowNumber)); tr.classList.remove('dirty-row');
     setSaveState(dirtyRows.size ? `Осталось сохранить: ${dirtyRows.size}` : 'Все изменения сохранены', dirtyRows.size?'saving':'saved');
     if(!silent){ const btn=tr.querySelector('[data-action="save"]'); if(btn){btn.textContent='Сохранено ✓';setTimeout(()=>btn.textContent='Сохранить',1200);} }
+    if (fields.status !== undefined && fields.status !== existing.status) loadTasks(); // подтянуть свежую историю статуса с сервера
   }catch(e){ console.error(e); setSaveState('Ошибка сохранения','error'); if(!silent) alert('Не удалось сохранить изменения.'); }
 }
 
@@ -890,47 +710,23 @@ document.getElementById('taskBody').addEventListener('click', async (e) => {
   const tr = btn.closest('tr');
   const rowNumber = tr.dataset.row;
   const action = btn.dataset.action;
-  const existing = tasks.find(t => t.rowNumber == rowNumber);
-  const role = currentUser.role;
 
   if (action === 'save') {
     await saveTaskRow(tr, false);
   } else if (action === 'soft-delete') {
     if (confirm('Скрыть эту задачу для команды?')) {
-      await updateRange(`J${rowNumber}:J${rowNumber}`, ['deleted_by_manager']);
+      const data = await apiCall('softDeleteTask', { rowNumber });
+      if (!data.ok) { alert(data.error || 'Не удалось скрыть задачу.'); return; }
       loadTasks();
     }
   } else if (action === 'hard-delete') {
     if (confirm('Вы уверены, что хотите окончательно стереть эту задачу из базы данных?')) {
-      const sheetId = await getTasksSheetId();
-      const rowIndex = parseInt(rowNumber, 10) - 1; // 0-indexed для API
-      try{
-        await gapi.client.sheets.spreadsheets.batchUpdate({
-          spreadsheetId: CONFIG.SPREADSHEET_ID,
-          resource: {
-            requests: [{
-              deleteDimension: {
-                range: { sheetId: sheetId, dimension: 'ROWS', startIndex: rowIndex, endIndex: rowIndex + 1 }
-              }
-            }]
-          }
-        });
-        loadTasks();
-      } catch(e){ console.error(e); alert('Не удалось удалить строку.'); }
+      const data = await apiCall('hardDeleteTask', { rowNumber });
+      if (!data.ok) { alert(data.error || 'Не удалось удалить строку.'); return; }
+      loadTasks();
     }
   }
 });
-
-async function updateRange(rangeSuffix, rowValues){
-  const range = `${CONFIG.SHEET_NAME}!${rangeSuffix}`;
-  try{
-    await gapi.client.sheets.spreadsheets.values.update({
-      spreadsheetId: CONFIG.SPREADSHEET_ID, range,
-      valueInputOption: 'USER_ENTERED',
-      resource: { values: [rowValues] },
-    });
-  } catch(e) { alert('Не удалось сохранить изменения.'); }
-}
 
 document.getElementById('showAddBtn').addEventListener('click', () => {
   document.getElementById('addRow').classList.toggle('hidden');
@@ -939,38 +735,18 @@ document.getElementById('showAddBtn').addEventListener('click', () => {
 document.getElementById('newTask').addEventListener('input', () => autosizeTextarea(document.getElementById('newTask')));
 
 document.getElementById('saveNewBtn').addEventListener('click', async () => {
-  const now = new Date();
-  
-  // Авто-генерация даты по Московскому времени (Europe/Moscow)
-  const moscowDate = now.toLocaleDateString('ru-RU', { timeZone: 'Europe/Moscow' });
-  const moscowTime = now.toLocaleTimeString('ru-RU', { 
-    timeZone: 'Europe/Moscow', 
-    hour: '2-digit', 
-    minute: '2-digit' 
-  });
-  const formattedDate = `${moscowDate} ${moscowTime}`;
-
-  const row = [
-    formattedDate, // Колонку A заполняем штампом МСК
-    document.getElementById('newTask').value,
-    document.getElementById('newAssignee').value,
-    document.getElementById('newDeadline').value,
-    document.getElementById('newStatus').value,
-    document.getElementById('newPriority').value,
-    document.getElementById('newNotes').value,
-    '', '', '', 
-    currentUser.displayName,
-    '', '', ''
-  ];
-  if (!row[1]){ alert('Впиши название задачи'); return; }
+  const fields = {
+    task: document.getElementById('newTask').value,
+    assignee: document.getElementById('newAssignee').value,
+    deadline: document.getElementById('newDeadline').value,
+    status: document.getElementById('newStatus').value,
+    priority: document.getElementById('newPriority').value,
+    notes: document.getElementById('newNotes').value
+  };
+  if (!fields.task){ alert('Впиши название задачи'); return; }
   try{
-    await gapi.client.sheets.spreadsheets.values.append({
-      spreadsheetId: CONFIG.SPREADSHEET_ID,
-      range: `${CONFIG.SHEET_NAME}!A:N`,
-      valueInputOption: 'USER_ENTERED',
-      insertDataOption: 'INSERT_ROWS',
-      resource: { values: [row] },
-    });
+    const data = await apiCall('addTask', { fields });
+    if (!data.ok) throw new Error(data.error || 'Ошибка');
     ['newTask','newAssignee','newDeadline','newNotes'].forEach(id => document.getElementById(id).value = '');
     document.getElementById('addRow').classList.add('hidden');
     loadTasks();
@@ -1038,10 +814,6 @@ document.getElementById('mobileFilterToggle').addEventListener('click',()=>{
 function escapeHtml(str){
   return String(str).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 }
-
-document.getElementById('loginBtn').disabled = true;
-gapiLoaded();
-gisLoaded();
 
 function updateStickyOffset(){
   const header = document.querySelector('header');
