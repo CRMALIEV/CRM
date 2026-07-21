@@ -1,4 +1,4 @@
-ы<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ru">
 <head>
   <meta charset="UTF-8">
@@ -6,59 +6,41 @@
   <title>Тестовый Класс — LMS Координатор</title>
   <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
   <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
-    body { background: #1a1d20; color: #fff; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: sans-serif; }
+    body { background: #1a1d20; color: #fff; height: 100vh; display: flex; flex-direction: column; }
     
-    /* Экран входа */
-    #auth-screen { display: flex; justify-content: center; align-items: center; height: 100vh; background: #0f1113; padding: 20px; }
-    .auth-card { background: #24282c; padding: 25px; border-radius: 16px; width: 100%; max-width: 340px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
-    .auth-card input { width: 100%; padding: 14px; margin-bottom: 12px; border-radius: 8px; border: 1px solid #3a3f45; background: #1a1d20; color: #fff; font-size: 16px; }
-    .auth-card button { width: 100%; padding: 14px; border: none; border-radius: 8px; background: #0084ff; color: #fff; font-weight: bold; font-size: 16px; cursor: pointer; }
+    #auth-screen { display: flex; justify-content: center; align-items: center; height: 100vh; background: #0f1113; }
+    .auth-card { background: #24282c; padding: 25px; border-radius: 12px; width: 300px; text-align: center; }
+    .auth-card input { width: 100%; padding: 12px; margin-bottom: 10px; border-radius: 6px; border: 1px solid #3a3f45; background: #1a1d20; color: #fff; }
+    .auth-card button { width: 100%; padding: 12px; border: none; border-radius: 6px; background: #0084ff; color: #fff; font-weight: bold; cursor: pointer; }
     
-    /* Основной класс */
-    #classroom { display: none; flex-direction: column; height: 100vh; position: relative; }
-    header { background: #24282c; padding: 12px 15px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #3a3f45; font-size: 14px; }
+    #classroom { display: none; flex-direction: column; height: 100vh; }
+    header { background: #24282c; padding: 12px 15px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #3a3f45; }
     .role-badge { background: #4da6ff; color: #000; padding: 3px 8px; border-radius: 10px; font-weight: bold; font-size: 11px; }
     
     .main-area { flex: 1; padding: 10px; overflow-y: auto; }
-    
-    /* Адаптивная сетка видео */
-    .video-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 10px; }
-    @media (min-width: 768px) {
-      .video-grid { grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 15px; }
-    }
-    
-    .video-card { background: #000; border-radius: 12px; overflow: hidden; position: relative; aspect-ratio: 4/3; border: 2px solid #3a3f45; }
-    @media (min-width: 768px) { .video-card { aspect-ratio: 16/9; } }
-    
-    /* ВАЖНО ДЛЯ МОБИЛЬНЫХ: Видео не вылезает за пределы */
-    .video-card video { width: 100%; height: 100%; object-fit: cover; background: #111; }
-    
+    .video-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; }
+    .video-card { background: #000; border-radius: 10px; overflow: hidden; position: relative; aspect-ratio: 16/9; border: 2px solid #3a3f45; }
+    .video-card video { width: 100%; height: 100%; object-fit: cover; }
     .video-card .name-tag { position: absolute; top: 8px; left: 8px; background: rgba(0,0,0,0.7); padding: 3px 8px; border-radius: 6px; font-size: 11px; z-index: 2; }
     
-    /* Кнопки управления НА КАРТОЧКЕ УЧЕНИКА (Для Учителя) */
-    .card-actions { position: absolute; bottom: 8px; right: 8px; display: flex; gap: 5px; z-index: 2; }
-    .btn-mini { padding: 5px 8px; font-size: 11px; border: none; border-radius: 6px; background: rgba(0,0,0,0.7); color: #fff; cursor: pointer; border: 1px solid rgba(255,255,255,0.2); }
-    .btn-mini:active { background: #ff4d4d; }
-
-    /* НИЖНЯЯ ПАНЕЛЬ КНОПОК (Адаптирована под мобильные) */
-    .controls { background: #24282c; padding: 10px; display: flex; justify-content: center; gap: 8px; border-top: 1px solid #3a3f45; overflow-x: auto; -webkit-overflow-scrolling: touch; }
-    .btn { padding: 10px 12px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; display: flex; align-items: center; gap: 4px; font-size: 12px; white-space: nowrap; flex-shrink: 0; }
-    .btn-danger { background: #ff4d4d; color: #fff; }
-    .btn-secondary { background: #3a3f45; color: #fff; }
-    .btn-success { background: #28a745; color: #fff; }
-    .btn-info { background: #17a2b8; color: #fff; }
+    .controls { background: #24282c; padding: 10px; display: flex; justify-content: center; gap: 8px; flex-wrap: wrap; border-top: 1px solid #3a3f45; }
+    .btn { padding: 10px 14px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 12px; color: #fff; }
+    .btn-danger { background: #ff4d4d; }
+    .btn-secondary { background: #3a3f45; }
+    .btn-success { background: #28a745; }
+    .btn-info { background: #17a2b8; }
   </style>
 </head>
 <body>
 
+  <!-- ВХОД В ОДИН КЛИК ИЛИ ПО ПРОСТОМУ ЛОГИНУ (admin/5 или 1/1) -->
   <div id="auth-screen">
     <div class="auth-card">
-      <h3 style="margin-bottom:15px; color:#4da6ff;">Вход в Виртуальный Класс</h3>
+      <h3 style="margin-bottom:15px;">Тестовый Вход</h3>
       <input type="text" id="login" placeholder="Логин (admin или 1)">
       <input type="password" id="password" placeholder="Пароль (5 или 1)">
-      <button onclick="login()">Войти на урок</button>
-      <p id="error-msg" style="color: #ff4d4d; margin-top: 10px; font-size: 12px;"></p>
+      <button onclick="login()">Войти</button>
     </div>
   </div>
 
@@ -68,29 +50,30 @@
         <span id="user-display-name">Пользователь</span>
         <span id="user-role-badge" class="role-badge">Ученик</span>
       </div>
-      <div>Урок онлайн</div>
+      <div>Виртуальный Класс</div>
     </header>
 
     <div class="main-area">
-      <div class="video-grid" id="video-grid">
-        </div>
+      <div class="video-grid" id="video-grid"></div>
     </div>
 
     <div class="controls">
-      <button class="btn btn-secondary" onclick="toggleMic()">🎙️ Мик</button>
+      <button class="btn btn-secondary" onclick="toggleMic()">🎙️ Микрофон</button>
       <button class="btn btn-secondary" onclick="toggleCam()">📷 Камера</button>
       
-      <button class="btn btn-success" id="btn-share" style="display:none;" onclick="shareScreen()">🖥️ Экран</button>
-      <button class="btn btn-info" id="btn-popout" style="display:none;" onclick="openPopoutWindow()">🗔 Окно Учителя</button>
+      <!-- Кнопки управления учителя -->
+      <button class="btn btn-success" id="btn-share" style="display:none;" onclick="shareScreen()">🖥️ Трансляция экрана</button>
+      <button class="btn btn-info" id="btn-popout" style="display:none;" onclick="openPopoutWindow()">🗔 Окно Учителя (Управление)</button>
       
       <button class="btn btn-danger" onclick="location.reload()">Выйти</button>
     </div>
   </div>
 
   <script>
+    // Простая локальная авторизация
     const USERS_DB = [
-      { login: "admin", pass: "5", name: "Учитель (Анна И.)", role: "teacher" },
-      { login: "1", pass: "1", name: "Ученик 1 (Тел)", role: "student" },
+      { login: "admin", pass: "5", name: "Учитель", role: "teacher" },
+      { login: "1", pass: "1", name: "Ученик 1", role: "student" },
       { login: "2", pass: "1", name: "Ученик 2", role: "student" }
     ];
 
@@ -98,15 +81,14 @@
     let currentUser = null;
     let localStream = null;
     let peer = null;
-    let popoutWindowRef = null;
 
-    async function login() {
+    function login() {
       const l = document.getElementById('login').value.trim();
       const p = document.getElementById('password').value.trim();
       const user = USERS_DB.find(u => u.login === l && u.pass === p);
       
       if (!user) {
-        document.getElementById('error-msg').innerText = "Неверный логин или пароль";
+        alert("Используйте: admin / 5 (Учитель) или 1 / 1 (Ученик)");
         return;
       }
 
@@ -122,18 +104,12 @@
         document.getElementById('btn-popout').style.display = 'inline-flex';
       }
 
-      // Запрашиваем медиа-разрешения
-      await startWebRTC();
+      startWebRTC();
     }
 
     async function startWebRTC() {
       try {
-        // ВАЖНО ДЛЯ ТЕЛЕФОНОВ: Запрашиваем явный доступ к камере и микрофону
-        localStream = await navigator.mediaDevices.getUserMedia({ 
-          video: { width: { ideal: 640 }, height: { ideal: 480 }, facingMode: "user" }, 
-          audio: true 
-        });
-        
+        localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
         addVideoCard('local-video', currentUser.name + " (Вы)", localStream, true);
 
         const peerId = currentUser.role === 'teacher' ? ROOM_ID : undefined;
@@ -156,14 +132,12 @@
         });
 
       } catch (err) {
-        alert("ОШИБКА ДОСТУПА! Перейдите в настройки телефона -> Браузер -> Разрешите Камеру и Микрофон. Ошибка: " + err.message);
+        alert("Ошибка доступа к медиа: " + err.message);
       }
     }
 
-    // Создание карточки с ОБЯЗАТЕЛЬНЫМИ атрибутами для мобильных устройств
     function addVideoCard(id, label, stream, isMuted = false) {
       if (document.getElementById(id)) return;
-      
       const grid = document.getElementById('video-grid');
       const card = document.createElement('div');
       card.className = 'video-card';
@@ -173,9 +147,7 @@
       video.id = 'video-element-' + id;
       video.srcObject = stream;
       video.autoplay = true;
-      // ВАЖНО ДЛЯ IPHONE / ANDROID: Запрещает полноэкранный плеер iOS и разрешает воспроизведение
-      video.setAttribute('playsinline', '');
-      video.setAttribute('webkit-playsinline', '');
+      video.setAttribute('playsinline', ''); // Исправление для телефонов
       if (isMuted) video.muted = true;
 
       const nameTag = document.createElement('div');
@@ -184,91 +156,75 @@
 
       card.appendChild(video);
       card.appendChild(nameTag);
-
-      // ЕСЛИ УЧИТЕЛЬ: Добавляем точечные кнопки управления прямо на карточку ученика!
-      if (currentUser.role === 'teacher' && id !== 'local-video') {
-        const actions = document.createElement('div');
-        actions.className = 'card-actions';
-        actions.innerHTML = `
-          <button class="btn-mini" onclick="toggleStudentAudio('${id}')">🎙️ Выкл Звук</button>
-          <button class="btn-mini" onclick="toggleStudentVideo('${id}')">📷 Выкл Видео</button>
-        `;
-        card.appendChild(actions);
-      }
-
       grid.appendChild(card);
-      
-      // Авто-воспроизведение для мобильных (обход автоплей-блокировки)
-      video.play().catch(e => console.log("Требуется клик для воспроизведения"));
     }
 
-    // ТОЧЕЧНОЕ ОТКЛЮЧЕНИЕ УЧИТЕЛЕМ
-    function toggleStudentAudio(cardId) {
-      const videoElem = document.querySelector(`#${cardId} video`);
-      if (videoElem) {
-        videoElem.muted = !videoElem.muted;
-        alert(videoElem.muted ? "Звук ученика заглушен у учителя" : "Звук ученика включен");
-      }
-    }
-
-    function toggleStudentVideo(cardId) {
-      const videoElem = document.querySelector(`#${cardId} video`);
-      if (videoElem) {
-        videoElem.style.display = videoElem.style.display === 'none' ? 'block' : 'none';
-      }
-    }
-
-    // ПЛАВАЮЩЕЕ ОКНО УЧИТЕЛЯ (С кнопками управления учениками)
+    // ВСПЛЫВАЮЩЕЕ ОКНО УЧИТЕЛЯ С ПУЛЬТОМ ОТКЛЮЧЕНИЯ
     function openPopoutWindow() {
-      popoutWindowRef = window.open("", "TeacherPopout", "width=450,height=600,resizable=yes");
-      popoutWindowRef.document.write(`
+      const popout = window.open("", "TeacherPopout", "width=400,height=500,resizable=yes");
+      popout.document.write(`
         <html>
         <head>
-          <title>Плавающая панель Учителя</title>
+          <title>Управление Учениками</title>
           <style>
-            body { background: #1a1d20; color: #fff; font-family: sans-serif; padding: 10px; margin:0; }
-            .pop-card { background: #24282c; padding: 10px; border-radius: 8px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; }
-            button { padding: 6px 10px; border: none; border-radius: 6px; background: #ff4d4d; color: #fff; cursor: pointer; font-size: 11px; }
+            body { background:#1a1d20; color:#fff; font-family:sans-serif; padding:15px; margin:0; }
+            .item { background:#24282c; padding:10px; margin-bottom:8px; border-radius:6px; display:flex; justify-content:space-between; align-items:center; }
+            button { padding:6px 10px; border:none; border-radius:4px; background:#ff4d4d; color:#fff; cursor:pointer; font-size:11px; margin-left:4px; }
           </style>
         </head>
         <body>
-          <h4 style="margin-bottom:10px; color:#4da6ff;">Управление учениками</h4>
-          <div id="popout-students-list">
-            </div>
+          <h3 style="color:#4da6ff; margin-bottom:12px;">Управление Учениками</h3>
+          <div id="list"></div>
           <script>
-            function refreshList() {
-              const list = document.getElementById('popout-students-list');
+            function updateList() {
+              const list = document.getElementById('list');
               list.innerHTML = '';
               window.opener.document.querySelectorAll('.video-card').forEach(card => {
                 if (card.id !== 'local-video') {
                   const name = card.querySelector('.name-tag').innerText;
-                  const item = document.createElement('div');
-                  item.className = 'pop-card';
-                  item.innerHTML = \`
+                  const div = document.createElement('div');
+                  div.className = 'item';
+                  div.innerHTML = \`
                     <span>\${name}</span>
                     <div>
-                      <button onclick="window.opener.toggleStudentAudio('\${card.id}')">🎙️ Глушить</button>
-                      <button onclick="window.opener.toggleStudentVideo('\${card.id}')">📷 Видео</button>
+                      <button onclick="window.opener.muteStudent('\${card.id}')">🎙️ Выкл Звук</button>
+                      <button onclick="window.opener.hideStudentVideo('\${card.id}')">📷 Выкл Видео</button>
                     </div>
                   \`;
-                  list.appendChild(item);
+                  list.appendChild(div);
                 }
               });
             }
-            setInterval(refreshList, 2000);
-            refreshList();
+            setInterval(updateList, 1500);
+            updateList();
           <\/script>
         </body>
         </html>
       `);
     }
 
+    // Функция точечного отключения звука
+    function muteStudent(cardId) {
+      const videoElem = document.querySelector(`#${cardId} video`);
+      if (videoElem) {
+        videoElem.muted = !videoElem.muted;
+      }
+    }
+
+    // Функция точечного отключения видео
+    function hideStudentVideo(cardId) {
+      const videoElem = document.querySelector(`#${cardId} video`);
+      if (videoElem) {
+        videoElem.style.visibility = videoElem.style.visibility === 'hidden' ? 'visible' : 'hidden';
+      }
+    }
+
     async function shareScreen() {
       try {
-        const screenStream = await navigator.mediaDevices.getDisplayMedia({ video: true });
+        const screenStream = await navigator.mediaDevices.getDisplayMedia({ video: { displaySurface: "monitor" } });
         addVideoCard('screen-share', 'Экран Учителя', screenStream);
       } catch (e) {
-        console.log("Отмена выбора экрана");
+        console.log("Трансляция отменена");
       }
     }
 
