@@ -1,828 +1,232 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Координатор — рабочая панель</title>
-<style>
-  :root{
-    --bg:#F4F5F7; --card:#FFFFFF; --ink:#1B2130; --muted:#6B7280; --line:#E4E6EB;
-    --accent:#3D4B94; --accent-soft:#EEF0FA;
-    --amber:#C97A2B; --amber-soft:#FBEEE0;
-    --green:#2E8B57; --green-soft:#E7F5EC;
-    --red:#C0392B; --red-soft:#FBEAE8;
-    --violet:#7A4FBF; --violet-soft:#F1EBFA;
-    --teal:#1D8A8A; --teal-soft:#E4F5F5;
-    --mono: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
-  }
-  *{box-sizing:border-box;}
-  body{margin:0; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif; background:var(--bg); color:var(--ink);}
-  header{display:flex; align-items:center; justify-content:space-between; padding:18px 24px; background:var(--card); border-bottom:1px solid var(--line); position:sticky; top:0; z-index:5; flex-wrap:wrap; gap:10px;}
-  header h1{font-size:18px; margin:0; letter-spacing:.2px;}
-  header .eyebrow{font-family:var(--mono); font-size:11px; color:var(--muted); letter-spacing:1px; text-transform:uppercase;}
-  #authArea{display:flex; align-items:center; gap:10px; flex-wrap:wrap;}
-  #userEmail{font-size:13px; color:var(--muted);}
-  .loginForm{display:flex; gap:8px; align-items:center;}
-  .loginForm input{padding:7px 10px; border-radius:8px; border:1px solid var(--line); font-size:13px; width:130px;}
-  .loginError{font-size:12px; color:var(--red); max-width:220px;}
-  .roleBadge{font-family:var(--mono); font-size:10.5px; padding:3px 9px; border-radius:20px; text-transform:uppercase; letter-spacing:.5px; font-weight:700;}
-  .roleBadge.admin{background:var(--accent-soft); color:var(--accent);}
-  .roleBadge.manager{background:var(--violet-soft); color:var(--violet);}
-  .roleBadge.supervisor{background:var(--amber-soft); color:var(--amber);}
-  .roleBadge.employee{background:var(--green-soft); color:var(--green);}
-  button{font-family:inherit; font-size:13px; border:1px solid var(--line); background:var(--card); padding:8px 14px; border-radius:8px; cursor:pointer; color:var(--ink);}
-  button.primary{background:var(--accent); color:#fff; border-color:var(--accent);}
-  button.danger{background:var(--red-soft); color:var(--red); border-color:#E7B9B2;}
-  button:hover{background:var(--bg);}
-  button.primary:hover{background:var(--accent); opacity:.92;}
-  button.danger:hover{background:var(--red); color:#fff;}
-  main{width:96%; max-width:1900px; margin:0 auto; padding:24px;}
-  #stickyControls{position:sticky; z-index:4; background:var(--bg); padding-top:8px; margin-bottom:4px;}
-  #accessDenied{background:var(--red-soft); border:1px solid #E7B9B2; color:var(--red); padding:18px; border-radius:10px; margin-bottom:20px; font-size:14px;}
-  
-  /* Панель фильтров */
-  .filter-panel-title { font-size: 12px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; }
-  .toolbar-filters { display: flex; gap: 10px; background: var(--card); border: 1px solid var(--line); padding: 14px; border-radius: 12px; margin-bottom: 16px; flex-wrap: wrap; align-items: center; }
-  .toolbar-filters select, .toolbar-filters input { padding: 7px 10px; border-radius: 8px; border: 1px solid var(--line); font-size: 13px; background: #fff; min-width: 140px; color: var(--ink); }
-  .toolbar-filters select:hover, .toolbar-filters input:hover { border-color: var(--muted); }
-  .filter-group { display: flex; flex-direction: column; gap: 4px; }
-  .filter-group label { font-size: 11px; color: var(--muted); font-weight: 500; }
-  .filterAndActionsRow{display:flex; align-items:flex-start; gap:12px; flex-wrap:wrap;}
-  .filterAndActionsRow .toolbar-filters{flex:1 1 auto; margin-bottom:0;}
-  .toolbar-actions { display: flex; gap: 10px; margin-left: auto; align-items: center; flex-wrap: wrap; flex-shrink:0; }
-
-  .card{background:var(--card); border:1px solid var(--line); border-radius:12px; overflow:hidden; overflow-x:auto;}
-  table{width:100%; border-collapse:collapse; font-size:13.5px; min-width:1500px; table-layout:fixed;}
-  th{text-align:left; padding:10px 12px; font-family:var(--mono); font-size:10.5px; text-transform:uppercase; letter-spacing:.6px; color:var(--muted); border-bottom:1px solid var(--line); background:#FAFBFC; white-space:normal; word-break:break-word;}
-  td{padding:10px 12px; border-bottom:1px solid var(--line); vertical-align:top; overflow-wrap:break-word; word-break:break-word;}
-  tr:last-child td{border-bottom:none;}
-  tr.deleted-row td{background:#FDF2F2; opacity:0.85;}
-  td input, td textarea, td select{width:100%; border:1px solid var(--line); background:#fff; font-family:inherit; font-size:13.5px; padding:4px 6px; border-radius:6px; color:var(--ink); box-sizing:border-box;}
-  td select{overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
-  td input:hover, td textarea:hover, td select:hover{border-color:var(--muted);}
-  td input:focus, td textarea:focus, td select:focus{outline:none; border-color:var(--accent); background:#fff;}
-  td .readonly{padding:5px 7px; color:var(--ink); border:1px solid var(--line); border-radius:6px; background:#FAFBFC; min-height:34px; display:block; overflow-wrap:break-word;}
-  td input:disabled, td textarea:disabled, td select:disabled{background:#F4F5F7; color:var(--muted); cursor:not-allowed;}
-  .pill{display:inline-block; padding:2px 9px; border-radius:20px; font-size:12px; font-weight:600;}
-  .pill.status-todo{background:var(--amber-soft); color:var(--amber);}
-  .pill.status-progress{background:var(--accent-soft); color:var(--accent);}
-  .pill.status-done{background:var(--green-soft); color:var(--green);}
-  .pill.status-late{background:var(--red-soft); color:var(--red);}
-  .pill.status-deleted{background:#F3F4F6; color:#4B5563; border:1px dashed #9CA3AF;}
-  select.statusSelect{cursor:pointer; font-weight:600; border-width:1.5px;}
-  select.statusSelect.status-todo{background:var(--amber-soft); color:var(--amber); border-color:var(--amber);}
-  select.statusSelect.status-progress{background:var(--accent-soft); color:var(--accent); border-color:var(--accent);}
-  select.statusSelect.status-done{background:var(--green-soft); color:var(--green); border-color:var(--green);}
-  select.statusSelect.status-late{background:var(--red-soft); color:var(--red); border-color:var(--red);}
-  td textarea{min-height:40px; line-height:1.4; resize:none; overflow:hidden; overflow-wrap:break-word;}
-  .commentCell textarea{min-height:38px; resize:none; overflow:hidden;}
-  .commentCell.manager.hasComment{background:var(--violet-soft); border-radius:8px;}
-  .commentCell.employee.hasComment{background:var(--teal-soft); border-radius:8px;}
-  .commentCell.notes.hasComment{background:var(--amber-soft); border-radius:8px;}
-  .rowActions{display:flex; gap:6px; flex-wrap:wrap;}
-  .rowActions button{padding:5px 9px; font-size:12px;}
-  #addRow td{background:#FAFBFC;}
-  #emptyState{padding:40px; text-align:center; color:var(--muted); font-size:14px;}
-  footer{width:96%; max-width:1900px; margin:20px auto; padding:0 24px 40px; font-size:12px; color:var(--muted);}
-  .deadline.overdue{color:var(--red); font-weight:600;}
-  .hidden{display:none !important;}
-
-
-  .saveState{font-size:12px;color:var(--muted);min-width:130px;text-align:right;}
-  .saveState.saving{color:var(--amber);}
-  .saveState.saved{color:var(--green);}
-  .saveState.error{color:var(--red);}
-  .employeeTag{display:inline-flex;align-items:center;gap:7px;padding:5px 9px;border-radius:14px;font-weight:700;white-space:normal; line-height:1.3;}
-  .assigneeWrap{position:relative; display:block;}
-  .assigneeWrap .assigneeDisplay{display:inline-flex; width:100%; box-sizing:border-box;}
-  .assigneeWrap select.assigneeOverlay{position:absolute; inset:0; width:100%; height:100%; opacity:0; cursor:pointer; border:none; padding:0;}
-  .employeeDot{width:9px;height:9px;border-radius:50%;background:currentColor;box-shadow:0 0 0 3px rgba(255,255,255,.7);}
-  .statusHistory{font-size:11px;line-height:1.35;color:var(--muted);margin-top:5px;}
-  .dirty-row{box-shadow:inset 4px 0 0 var(--amber);}
-  .exportMenu{display:flex;gap:8px;flex-wrap:wrap;}
-  .mobile-filter-toggle{display:none;width:100%;justify-content:space-between;align-items:center;margin-bottom:8px;}
-
-  /* ===================== АДАПТИВНОСТЬ ===================== */
-
-  /* Планшет: чуть компактнее отступы и шрифты, таблица остаётся таблицей */
-  @media (max-width: 1024px){
-    main{padding:16px;}
-    header{padding:14px 16px;}
-    table{min-width:900px;}
-  }
-
-  /* Телефон: таблица превращается в список карточек — по одной задаче на карточку */
-  @media (max-width: 760px){
-    body{-webkit-text-size-adjust:100%;}
-    header{padding:12px 14px;}
-    header h1{font-size:16px;}
-    main{padding:12px;}
-    button{padding:10px 14px; font-size:14px;} /* крупнее для пальца */
-
-    #stickyControls{position:static !important;top:auto !important;padding-top:0;}
-    .filterAndActionsRow{flex-direction:column;}
-    .mobile-filter-toggle{display:flex;}
-    .toolbar-filters{padding:12px;max-height:none;overflow:visible;}
-    .toolbar-filters.mobile-collapsed{display:none;}
-    .filter-group{min-width:100%;}
-    .toolbar-filters select, .toolbar-filters input{width:100%; min-width:0; padding:10px;}
-    .toolbar-actions{justify-content:stretch;display:grid;grid-template-columns:1fr 1fr;gap:8px;}
-    .toolbar-actions button{width:100%;min-width:0;}
-    .toolbar-actions .saveState{grid-column:1/-1;text-align:center;min-width:0;}
-    .exportMenu{grid-column:1/-1;display:grid;grid-template-columns:1fr 1fr;}
-
-    .card{overflow-x:visible;}
-    table{min-width:0; width:100%;}
-    thead{display:none;} /* заголовки не нужны — подписи будут у каждого поля */
-
-    #taskTable, #taskTable tbody, #taskTable tr, #taskTable td{display:block; width:100%;}
-    #taskTable tr{
-      border:1px solid var(--line); border-radius:12px; margin:12px 0; overflow:hidden;
-      box-shadow:0 1px 3px rgba(0,0,0,.04);
-    }
-    #taskTable td{
-      display:grid; grid-template-columns:minmax(110px,38%) minmax(0,1fr); align-items:center; gap:10px;
-      padding:10px 14px; border-bottom:1px solid var(--line); text-align:right;
-    }
-    #taskTable td:last-child{border-bottom:none;}
-    #taskTable td::before{
-      content:attr(data-label); font-family:var(--mono); font-size:10px; text-transform:uppercase;
-      letter-spacing:.4px; color:var(--muted); font-weight:700; text-align:left;
-    }
-    #taskTable td > *{min-width:0;max-width:100%;}
-    #taskTable td.rowActions{display:flex;flex-direction:column; align-items:stretch; gap:8px;}
-    #taskTable td.rowActions::before{flex:0 0 auto; margin-bottom:2px;}
-    #taskTable td.rowActions button{width:100%;}
-    #taskTable td input, #taskTable td select, #taskTable td textarea{text-align:right; font-size:14px;}
-    #taskTable td .readonly{text-align:right; width:100%;}
-  }
-</style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Тестовый Класс — LMS Координатор</title>
+  <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', sans-serif; }
+    body { background: #1a1d20; color: #fff; height: 100vh; display: flex; flex-direction: column; }
+    
+    /* Авторизация */
+    #auth-screen { display: flex; justify-content: center; align-items: center; height: 100vh; background: #0f1113; }
+    .auth-card { background: #24282c; padding: 30px; border-radius: 12px; width: 320px; text-align: center; }
+    .auth-card input { width: 100%; padding: 12px; margin-bottom: 12px; border-radius: 6px; border: 1px solid #3a3f45; background: #1a1d20; color: #fff; }
+    .auth-card button { width: 100%; padding: 12px; border: none; border-radius: 6px; background: #0084ff; color: #fff; font-weight: bold; cursor: pointer; }
+    
+    /* Кабинет */
+    #classroom { display: none; flex-direction: column; height: 100vh; }
+    header { background: #24282c; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #3a3f45; }
+    .role-badge { background: #4da6ff; color: #000; padding: 4px 10px; border-radius: 12px; font-weight: bold; font-size: 12px; }
+    
+    .main-area { display: flex; flex: 1; overflow: hidden; }
+    
+    /* Сетка видео */
+    .video-grid { flex: 1; padding: 20px; display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 15px; align-content: start; }
+    .video-card { background: #000; border-radius: 10px; overflow: hidden; position: relative; aspect-ratio: 16/9; border: 2px solid #3a3f45; }
+    .video-card video { width: 100%; height: 100%; object-fit: cover; }
+    .video-card .name-tag { position: absolute; bottom: 8px; left: 8px; background: rgba(0,0,0,0.7); padding: 2px 8px; border-radius: 4px; font-size: 12px; }
+    
+    /* Пульт управления */
+    .controls { background: #24282c; padding: 15px; display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; border-top: 1px solid #3a3f45; }
+    .btn { padding: 10px 14px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; display: flex; align-items: center; gap: 6px; font-size: 13px; }
+    .btn-danger { background: #ff4d4d; color: #fff; }
+    .btn-secondary { background: #3a3f45; color: #fff; }
+    .btn-success { background: #28a745; color: #fff; }
+    .btn-info { background: #17a2b8; color: #fff; }
+  </style>
 </head>
 <body>
 
-<header>
-  <div>
-    <div class="eyebrow">Личная панель координатора</div>
-    <h1>Задачи и дедлайны</h1>
-  </div>
-  <div id="authArea">
-    <span id="roleBadge" class="roleBadge hidden"></span>
-    <span id="userEmail"></span>
-    <form id="loginForm" class="loginForm">
-      <input id="loginUsername" placeholder="Логин" autocomplete="username" required>
-      <input id="loginPassword" type="password" placeholder="Пароль" autocomplete="current-password" required>
-      <button id="loginBtn" class="primary" type="submit">Войти</button>
-    </form>
-    <span id="loginError" class="loginError hidden"></span>
-    <button id="logoutBtn" class="hidden">Выйти</button>
-  </div>
-</header>
-
-<main>
-  <div id="accessDenied" class="hidden">
-    Доступ заблокирован. Обратись к администратору.
+  <!-- АВТОРИЗАЦИЯ -->
+  <div id="auth-screen">
+    <div class="auth-card">
+      <h2 style="margin-bottom:15px;">Вход в Урок</h2>
+      <input type="text" id="login" placeholder="Логин (teacher или student1)">
+      <input type="password" id="password" placeholder="Пароль (123)">
+      <button onclick="login()">Войти в класс</button>
+      <p id="error-msg" style="color: #ff4d4d; margin-top: 10px; font-size: 12px;"></p>
+    </div>
   </div>
 
-  <div id="appArea" class="hidden">
-    
-    <!-- Панель мульти-фильтрации колонок + основные действия — зафиксированы при прокрутке -->
-    <div id="stickyControls">
-    <button id="mobileFilterToggle" class="mobile-filter-toggle"><span>Фильтры и поиск</span><span id="mobileFilterIcon">▼</span></button>
-    <div class="filter-panel-title" id="filterTitle">Фильтрация и поиск заявок</div>
-    <div class="filterAndActionsRow">
-    <div class="toolbar-filters" id="filterBar">
-      <div class="filter-group">
-        <label>Исполнитель</label>
-        <select id="filterAssignee"><option value="">Все исполнители</option></select>
+  <!-- ИНТЕРФЕЙС УРОКА -->
+  <div id="classroom">
+    <header>
+      <div>
+        <span id="user-display-name">Пользователь</span>
+        <span id="user-role-badge" class="role-badge">Ученик</span>
       </div>
+      <div>Виртуальный Класс «Координатор»</div>
+    </header>
+
+    <div class="main-area">
+      <div class="video-grid" id="video-grid">
+        <!-- Видиопотоки -->
+      </div>
+    </div>
+
+    <!-- Улучшенная Панель Управления -->
+    <div class="controls">
+      <button class="btn btn-secondary" onclick="toggleMic()">🎙️ Микрофон</button>
+      <button class="btn btn-secondary" onclick="toggleCam()">📷 Камера</button>
       
-      <div class="filter-group">
-        <label>Статус задачи</label>
-        <select id="filterStatus">
-          <option value="">Все статусы</option>
-          <option value="todo">К выполнению</option>
-          <option value="progress">В работе</option>
-          <option value="done">Готово</option>
-          <option value="late">Просрочено</option>
-          <option id="filterOptDeleted" value="deleted" class="hidden">Удаленные менеджером</option>
-        </select>
-      </div>
-
-      <div class="filter-group">
-        <label>Приоритет</label>
-        <select id="filterPriority">
-          <option value="">Все приоритеты</option>
-          <option value="Обычный">Обычный</option>
-          <option value="Высокий">Высокий</option>
-          <option value="Низкий">Низкий</option>
-        </select>
-      </div>
-
-      <div class="filter-group">
-        <label>Кто поставил</label>
-        <select id="filterCreator"><option value="">Все авторы</option></select>
-      </div>
-
-      <div class="filter-group">
-        <label>Точный дедлайн</label>
-        <input type="date" id="filterDeadline">
-      </div>
+      <!-- Функции трансляции и окон (Для Учителя) -->
+      <button class="btn btn-success" id="btn-share" style="display:none;" onclick="shareScreen()">🖥️ Трансляция (Экран / Окно / Вкладка)</button>
+      <button class="btn btn-info" id="btn-pip" style="display:none;" onclick="togglePiP()">🔲 Картинка в картинке</button>
+      <button class="btn btn-info" id="btn-popout" style="display:none;" onclick="openPopoutWindow()">🗔 Отдельное окно</button>
       
-      <div class="filter-group" style="justify-content: flex-end; height: 44px;">
-        <button id="resetFiltersBtn" style="padding: 6px 12px;">Сбросить фильтры</button>
-      </div>
-    </div>
-
-    <!-- Кнопки основных действий — в одной строке с панелью фильтров, справа -->
-    <div class="toolbar-actions">
-      <button id="refreshBtn">Обновить базу данных</button>
-      <button id="saveAllBtn" class="primary">Быстро сохранить всё</button>
-      <div class="exportMenu">
-        <button id="exportExcelBtn">Выгрузить Excel</button>
-        <button id="exportPdfBtn">Выгрузить PDF</button>
-      </div>
-      <button id="showAddBtn" class="primary hidden">+ Новая задача</button>
-      <span id="saveState" class="saveState">Все изменения сохранены</span>
-    </div>
-    </div><!-- /filterAndActionsRow -->
-    </div><!-- /stickyControls -->
-
-    <div class="card">
-      <table id="taskTable">
-        <colgroup>
-          <col style="width:6%">   <!-- Дата составления -->
-          <col style="width:15%">  <!-- Задача -->
-          <col style="width:11%">  <!-- Исполнитель -->
-          <col style="width:7%">   <!-- Дедлайн -->
-          <col style="width:9%">   <!-- Статус -->
-          <col style="width:6%">   <!-- Приоритет -->
-          <col style="width:10%">  <!-- Коммент. менеджера -->
-          <col style="width:10%">  <!-- Коммент. руководителя -->
-          <col style="width:10%">  <!-- Коммент. сотрудника -->
-          <col style="width:7%">   <!-- Кто поставил -->
-          <col style="width:9%">   <!-- Управление -->
-        </colgroup>
-        <thead>
-          <tr id="headRow">
-            <th data-label="Дата составления">Дата составления</th>
-            <th data-label="Задача">Задача</th>
-            <th data-label="Исполнитель">Исполнитель</th>
-            <th data-label="Дедлайн">Дедлайн</th>
-            <th data-label="Статус">Статус</th>
-            <th data-label="Приоритет">Приоритет</th>
-            <th data-label="Коммент. менеджера">Коммент. менеджера</th>
-            <th data-label="Коммент. руководителя">Коммент. руководителя</th>
-            <th data-label="Коммент. сотрудника">Коммент. сотрудника</th>
-            <th data-label="Кто поставил">Кто поставил</th>
-            <th data-label="Управление">Управление</th>
-          </tr>
-        </thead>
-        <tbody id="taskBody">
-          <tr id="addRow" class="hidden">
-            <td data-label="Дата составления"><span id="autoCreatedDate" class="readonly" style="font-size:12px; color:var(--muted);">Авто</span></td>
-            <td data-label="Задача"><textarea id="newTask" rows="2" placeholder="Что нужно сделать"></textarea></td>
-            <td data-label="Исполнитель"><select id="newAssignee"><option value="">Выбери исполнителя</option></select></td>
-            <td data-label="Дедлайн"><input id="newDeadline" type="date"></td>
-            <td data-label="Статус">
-              <select id="newStatus">
-                <option value="todo">К выполнению</option>
-                <option value="progress">В работе</option>
-                <option value="done">Готово</option>
-              </select>
-            </td>
-            <td data-label="Приоритет">
-              <select id="newPriority">
-                <option value="Обычный">Обычный</option>
-                <option value="Высокий">Высокий</option>
-                <option value="Низкий">Низкий</option>
-              </select>
-            </td>
-            <td data-label="Коммент. менеджера"><input id="newNotes" placeholder="Комментарий менеджера"></td>
-            <td data-label="Коммент. руководителя"></td>
-            <td data-label="Коммент. сотрудника"></td>
-            <td data-label="Кто поставил"><span id="autoAuthor" class="readonly" style="font-size:12px; color:var(--muted);">—</span></td>
-            <td data-label="Управление"><button id="saveNewBtn" class="primary">Добавить</button></td>
-          </tr>
-        </tbody>
-      </table>
-      <div id="emptyState" class="hidden">По указанным фильтрам задач не найдено.</div>
+      <button class="btn btn-danger" onclick="location.reload()">Выйти из урока</button>
     </div>
   </div>
-</main>
 
-<footer>
-  Все данные хранятся в твоей собственной Google Таблице.
-</footer>
+  <script>
+    const USERS_DB = [
+      { login: "teacher", pass: "123", name: "Учитель (Анна Ивановна)", role: "teacher" },
+      { login: "student1", pass: "123", name: "Иванов Ваня", role: "student" }
+    ];
 
-<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-<script>
-// ======================= НАСТРОЙКИ =======================
-const CONFIG = {
-  APPS_SCRIPT_URL: 'https://script.google.com/macros/s/AKfycbyKoIg3isCBvt3oIBRdcB2UegJer57yZOJXqM87Q1Zjv33T8ZlYV4jL0F6NUKjnBeeH5w/exec' // .../exec, из Apps Script → Развернуть
-};
-// ===========================================================
+    const ROOM_ID = "milky-school-test-room-2026";
+    let currentUser = null;
+    let localStream = null;
+    let peer = null;
 
-let tasks = []; // + statusChangedBy, statusChangedAt, statusHistory
-let currentUser = null; // {username, password, role, name, displayName}
-let allTeamNames = [];
-let dirtyRows = new Set();
-let autoSaveTimers = new Map();
-let isBulkSaving = false;
-
-// Единая функция обращения к серверу. При каждом запросе (кроме входа)
-// передаём логин/пароль — сервер сам заново проверяет их и статус сотрудника,
-// поэтому отдельные токены и их отзыв не нужны: удалил/сменил пароль → доступ обрывается сразу.
-async function apiCall(action, params){
-  const payload = Object.assign({ action }, params || {});
-  if (currentUser){
-    payload.username = currentUser.username;
-    payload.password = currentUser.password;
-  }
-  const res = await fetch(CONFIG.APPS_SCRIPT_URL, {
-    method: 'POST',
-    // Без Content-Type: application/json — иначе браузер отправит preflight-запрос,
-    // который Google Apps Script не умеет обрабатывать.
-    body: JSON.stringify(payload)
-  });
-  return res.json();
-}
-
-document.getElementById('loginForm').addEventListener('submit', async (e) => {
-  e.preventDefault();
-  const username = document.getElementById('loginUsername').value.trim();
-  const password = document.getElementById('loginPassword').value;
-  const errEl = document.getElementById('loginError');
-  errEl.classList.add('hidden');
-  if (!username || !password) return;
-
-  document.getElementById('loginBtn').disabled = true;
-  document.getElementById('loginBtn').textContent = 'Входим…';
-  try{
-    const resp = await fetch(CONFIG.APPS_SCRIPT_URL, {
-      method: 'POST',
-      body: JSON.stringify({ action: 'login', username, password })
-    });
-    const data = await resp.json();
-    if (!data.ok){
-      errEl.textContent = data.error || 'Не удалось войти';
-      errEl.classList.remove('hidden');
-      return;
-    }
-    currentUser = { username, password, role: data.role, name: data.name };
-    currentUser.displayName = currentUser.name || currentUser.username;
-    onSignedIn();
-  } catch(err){
-    errEl.textContent = 'Нет связи с сервером. Проверь адрес APPS_SCRIPT_URL и подключение к интернету.';
-    errEl.classList.remove('hidden');
-  } finally {
-    document.getElementById('loginBtn').disabled = false;
-    document.getElementById('loginBtn').textContent = 'Войти';
-  }
-});
-
-document.getElementById('logoutBtn').addEventListener('click', () => {
-  currentUser = null; tasks = [];
-  document.getElementById('loginForm').classList.remove('hidden');
-  document.getElementById('logoutBtn').classList.add('hidden');
-  document.getElementById('roleBadge').classList.add('hidden');
-  document.getElementById('userEmail').textContent = '';
-  document.getElementById('appArea').classList.add('hidden');
-  document.getElementById('loginUsername').value = '';
-  document.getElementById('loginPassword').value = '';
-});
-
-async function onSignedIn(){
-  document.getElementById('loginForm').classList.add('hidden');
-  document.getElementById('loginError').classList.add('hidden');
-  document.getElementById('logoutBtn').classList.remove('hidden');
-  document.getElementById('userEmail').textContent = currentUser.displayName;
-  document.getElementById('accessDenied').classList.add('hidden');
-
-  const badge = document.getElementById('roleBadge');
-  const roleLabels = {admin:'Директор / Админ', manager:'Менеджер', supervisor:'Руководитель', employee:'Сотрудник'};
-  badge.textContent = roleLabels[currentUser.role] || currentUser.role;
-  badge.className = 'roleBadge ' + currentUser.role;
-  badge.classList.remove('hidden');
-
-  document.getElementById('appArea').classList.remove('hidden');
-
-  const canCreate = ['admin', 'manager', 'supervisor'].includes(currentUser.role);
-  document.getElementById('showAddBtn').classList.toggle('hidden', !canCreate);
-  document.getElementById('autoAuthor').textContent = currentUser.displayName;
-
-  const canWriteManagerNote = (currentUser.role === 'admin' || currentUser.role === 'manager');
-  const newNotesEl = document.getElementById('newNotes');
-  newNotesEl.disabled = !canWriteManagerNote;
-  newNotesEl.placeholder = canWriteManagerNote ? 'Комментарий менеджера' : '(заполняет менеджер)';
-
-  // Панель фильтров доступна всем ролям, включая сотрудника
-  document.getElementById('filterBar').classList.remove('hidden');
-  document.getElementById('filterTitle').classList.remove('hidden');
-
-  document.getElementById('filterOptDeleted').classList.toggle('hidden', currentUser.role !== 'admin');
-
-  await loadTeamNames();
-  loadTasks();
-  updateStickyOffset();
-}
-
-async function loadTeamNames(){
-  try{
-    const data = await apiCall('getTeamNames');
-    allTeamNames = (data.names || []).map(n => n.trim()).filter(Boolean);
-    populateNewAssigneeSelect();
-  } catch(e){ console.warn('Не удалось загрузить список команды', e); }
-}
-
-function populateNewAssigneeSelect(){
-  const sel = document.getElementById('newAssignee');
-  if (!sel) return;
-  sel.innerHTML = '<option value="">Выбери исполнителя</option>' +
-    allTeamNames.map(n => `<option value="${escapeHtml(n)}">${escapeHtml(n)}</option>`).join('');
-}
-
-async function loadTasks(){
-  try{
-    const data = await apiCall('getTasks');
-    if (!data.ok){
-      if (data.error && data.error.includes('заблокирован')){
-        document.getElementById('accessDenied').classList.remove('hidden');
-        document.getElementById('appArea').classList.add('hidden');
+    function login() {
+      const l = document.getElementById('login').value.trim();
+      const p = document.getElementById('password').value.trim();
+      const user = USERS_DB.find(u => u.login === l && u.pass === p);
+      
+      if (!user) {
+        document.getElementById('error-msg').innerText = "Неверный логин или пароль";
         return;
       }
-      alert(data.error || 'Ошибка загрузки данных.');
-      return;
-    }
-    // Сервер уже отфильтровал задачи по роли (сотрудник видит только свои,
-    // остальные — без скрытых менеджером), поэтому просто принимаем список как есть.
-    tasks = data.tasks;
 
-    populateDynamicFilters();
-    renderTasks();
-  } catch(e){ alert('Ошибка загрузки данных.'); }
-}
+      currentUser = user;
+      document.getElementById('auth-screen').style.display = 'none';
+      document.getElementById('classroom').style.display = 'flex';
+      
+      document.getElementById('user-display-name').innerText = user.name;
+      document.getElementById('user-role-badge').innerText = user.role === 'teacher' ? 'УЧИТЕЛЬ' : 'УЧЕНИК';
 
-function populateDynamicFilters(){
-  const assignees = [...new Set(tasks.map(t => t.assignee).filter(Boolean))];
-  const creators = [...new Set(tasks.map(t => t.creator).filter(Boolean))];
-
-  const selAssignee = document.getElementById('filterAssignee');
-  const currAssignee = selAssignee.value;
-  selAssignee.innerHTML = '<option value="">Все исполнители</option>' + assignees.map(n => `<option value="${n}">${n}</option>`).join('');
-  selAssignee.value = currAssignee;
-
-  const selCreator = document.getElementById('filterCreator');
-  const currCreator = selCreator.value;
-  selCreator.innerHTML = '<option value="">Все авторы</option>' + creators.map(c => `<option value="${c}">${c}</option>`).join('');
-  selCreator.value = currCreator;
-}
-
-function isOverdue(t){
-  if (!t.deadline || t.status === 'done' || t.deleteMarker === 'deleted_by_manager') return false;
-  return new Date(t.deadline) < new Date(new Date().toDateString());
-}
-
-
-function employeeColor(name){
-  const palette = [
-    ['#E8EEFF','#324AA8'],['#FCEDE8','#B5462E'],['#E6F7EE','#237A4B'],['#F5ECFF','#7441A8'],
-    ['#FFF3D9','#9A6500'],['#E4F6F6','#167676'],['#FDEAF3','#A6386D'],['#EEF1F4','#4B5563']
-  ];
-  let hash = 0;
-  for (const ch of String(name || '')) hash = ((hash << 5) - hash) + ch.charCodeAt(0);
-  return palette[Math.abs(hash) % palette.length];
-}
-function employeeTag(name){
-  const [bg,fg] = employeeColor(name);
-  return `<span class="employeeTag" style="background:${bg};color:${fg}"><span class="employeeDot"></span>${escapeHtml(name || 'Не назначен')}</span>`;
-}
-function setSaveState(text, state=''){
-  const el=document.getElementById('saveState');
-  el.textContent=text; el.className='saveState'+(state?' '+state:'');
-}
-function markDirty(tr){
-  if(!tr || !tr.dataset.row) return;
-  dirtyRows.add(String(tr.dataset.row));
-  tr.classList.add('dirty-row');
-  setSaveState(`Есть несохранённые изменения: ${dirtyRows.size}`,'saving');
-}
-function scheduleAutoSave(tr){
-  markDirty(tr);
-  const row=String(tr.dataset.row);
-  clearTimeout(autoSaveTimers.get(row));
-  autoSaveTimers.set(row,setTimeout(()=>saveTaskRow(tr,true),900));
-}
-
-function renderTasks(){
-  const body = document.getElementById('taskBody');
-  const addRow = document.getElementById('addRow');
-  [...body.querySelectorAll('tr:not(#addRow)')].forEach(r => r.remove());
-
-  const fAssignee = document.getElementById('filterAssignee').value;
-  const fStatus = document.getElementById('filterStatus').value;
-  const fPriority = document.getElementById('filterPriority').value;
-  const fCreator = document.getElementById('filterCreator').value;
-  const fDeadline = document.getElementById('filterDeadline').value;
-  
-  const filtered = tasks.filter(t => {
-    if (fAssignee && t.assignee !== fAssignee) return false;
-    if (fPriority && t.priority !== fPriority) return false;
-    if (fCreator && t.creator !== fCreator) return false;
-    if (fDeadline && t.deadline !== fDeadline) return false;
-    
-    if (fStatus) {
-      if (fStatus === 'late') return isOverdue(t);
-      if (fStatus === 'deleted') return t.deleteMarker === 'deleted_by_manager';
-      return t.status === fStatus && t.deleteMarker !== 'deleted_by_manager';
-    }
-    return true;
-  });
-  
-  document.getElementById('emptyState').classList.toggle('hidden', filtered.length !== 0);
-  const role = currentUser.role;
-
-  filtered.forEach(t => {
-    const tr = document.createElement('tr');
-    if (t.deleteMarker === 'deleted_by_manager') tr.classList.add('deleted-row');
-
-    let effectiveStatus = isOverdue(t) ? 'late' : t.status;
-    if (t.deleteMarker === 'deleted_by_manager') effectiveStatus = 'deleted';
-
-    const isCreatorSupervisor = role === 'supervisor' && t.creator.trim().toLowerCase() === currentUser.displayName.trim().toLowerCase();
-    const coreEditable = (role === 'admin' || role === 'manager' || isCreatorSupervisor) && t.deleteMarker !== 'deleted_by_manager';
-    
-    const statusEditable = (role === 'admin' || role === 'manager' || role === 'employee') && t.deleteMarker !== 'deleted_by_manager';
-    const notesEditable = (role === 'admin' || role === 'manager') && t.deleteMarker !== 'deleted_by_manager';
-    const managerCommentEditable = (role === 'admin' || role === 'supervisor') && t.deleteMarker !== 'deleted_by_manager';
-    const employeeCommentEditable = (role === 'admin' || role === 'employee') && t.deleteMarker !== 'deleted_by_manager';
-
-    const field = (val, name, type) => {
-      if (!coreEditable){
-        if (name === 'deadline' && isOverdue(t)) {
-          return `<div class="readonly deadline overdue">${escapeHtml(val)}</div>`;
-        }
-        if (name === 'assignee') return employeeTag(val);
-        return `<div class="readonly">${escapeHtml(val)}</div>`;
+      if (user.role === 'teacher') {
+        document.getElementById('btn-share').style.display = 'inline-flex';
+        document.getElementById('btn-pip').style.display = 'inline-flex';
+        document.getElementById('btn-popout').style.display = 'inline-flex';
       }
-      if (name === 'assignee'){
-        const opts = allTeamNames.map(n => `<option value="${escapeHtml(n)}" ${n===val?'selected':''}>${escapeHtml(n)}</option>`).join('');
-        const extra = val && !allTeamNames.includes(val) ? `<option value="${escapeHtml(val)}" selected>${escapeHtml(val)}</option>` : '';
-        const [bg,fg] = employeeColor(val);
-        return `<div class="assigneeWrap">
-          <span class="employeeTag assigneeDisplay" style="background:${bg};color:${fg}"><span class="employeeDot"></span>${escapeHtml(val || 'Не назначен')}</span>
-          <select data-field="assignee" class="assigneeOverlay" title="${escapeHtml(val)}"><option value="">—</option>${extra}${opts}</select>
-        </div>`;
-      }
-      if (name === 'priority') {
-        return `
-          <select data-field="priority">
-            <option value="Обычный" ${val==='Обычный'?'selected':''}>Обычный</option>
-            <option value="Высокий" ${val==='Высокий'?'selected':''}>Высокий</option>
-            <option value="Низкий" ${val==='Низкий'?'selected':''}>Низкий</option>
-          </select>`;
-      }
-      if (name === 'task') {
-        return `<textarea data-field="task" rows="2">${escapeHtml(val)}</textarea>`;
-      }
-      return `<input value="${escapeHtml(val)}" data-field="${name}" ${type ? `type="${type}"` : ''} />`;
-    };
 
-    let statusCell = '';
-    if (statusEditable) {
-      statusCell = `
-        <select data-field="status" class="statusSelect status-${effectiveStatus}" title="${{todo:'К выполнению', progress:'В работе', done:'Готово', late:'Просрочено'}[effectiveStatus] || ''}">
-          <option value="todo" ${t.status==='todo'?'selected':''}>К выполнению</option>
-          <option value="progress" ${t.status==='progress'?'selected':''}>В работе</option>
-          <option value="done" ${t.status==='done'?'selected':''}>Готово</option>
-        </select>`;
-    } else {
-      const statusLabels = {todo:'К выполнению', progress:'В работе', done:'Готово', late:'Просрочено', deleted:'Удалено менеджером'};
-      statusCell = `<span class="pill status-${effectiveStatus}">${statusLabels[effectiveStatus] || effectiveStatus}</span>`;
+      startWebRTC();
     }
 
-    const notesCell = notesEditable
-      ? `<textarea data-field="notes" placeholder="Комментарий менеджера...">${escapeHtml(t.notes)}</textarea>`
-      : `<div class="readonly">${escapeHtml(t.notes)}</div>`;
+    async function startWebRTC() {
+      try {
+        localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+        addVideoCard('local-video', currentUser.name + " (Вы)", localStream, true);
 
-    const managerCommentCell = managerCommentEditable
-      ? `<textarea data-field="managerComment" placeholder="Коммент руководителя...">${escapeHtml(t.managerComment)}</textarea>`
-      : `<div class="readonly">${escapeHtml(t.managerComment)}</div>`;
+        const peerId = currentUser.role === 'teacher' ? ROOM_ID : undefined;
+        peer = new Peer(peerId);
 
-    const employeeCommentCell = employeeCommentEditable
-      ? `<textarea data-field="employeeComment" placeholder="Коммент сотрудника...">${escapeHtml(t.employeeComment)}</textarea>`
-      : `<div class="readonly">${escapeHtml(t.employeeComment)}</div>`;
-
-    let actionButtons = `<button data-action="save" class="primary">Сохранить</button>`;
-    if (role === 'manager' && t.deleteMarker !== 'deleted_by_manager') {
-      actionButtons += ` <button data-action="soft-delete" class="danger" title="Скрыть эту задачу от команды">🗑️</button>`;
-    }
-    if (role === 'admin') {
-      actionButtons += ` <button data-action="hard-delete" class="danger" title="Удалить навсегда — без восстановления">🗑️❌</button>`;
-    }
-
-    tr.innerHTML = `
-      <td data-label="Дата составления"><div class="readonly" style="font-size:12px; font-weight:500;">${escapeHtml(t.createdDate)}</div></td>
-      <td data-label="Задача">${field(t.task, 'task')}</td>
-      <td data-label="Исполнитель">${field(t.assignee, 'assignee')}</td>
-      <td data-label="Дедлайн">${field(t.deadline, 'deadline', 'date')}</td>
-      <td data-label="Статус">${statusCell}${t.statusChangedBy || t.statusChangedAt ? `<div class="statusHistory">Изменил: ${escapeHtml(t.statusChangedBy || '—')}<br>${escapeHtml(t.statusChangedAt || '')}</div>` : ''}</td>
-      <td data-label="Приоритет">${field(t.priority, 'priority')}</td>
-      <td data-label="Коммент. менеджера" class="commentCell notes ${t.notes ? 'hasComment' : ''}">${notesCell}</td>
-      <td data-label="Коммент. руководителя" class="commentCell manager ${t.managerComment ? 'hasComment' : ''}">${managerCommentCell}</td>
-      <td data-label="Коммент. сотрудника" class="commentCell employee ${t.employeeComment ? 'hasComment' : ''}">${employeeCommentCell}</td>
-      <td data-label="Кто поставил"><div class="readonly" style="font-size:12px; font-weight:500;">${escapeHtml(t.creator)}</div></td>
-      <td data-label="Управление" class="rowActions">${actionButtons}</td>
-    `;
-    tr.dataset.row = t.rowNumber;
-    body.appendChild(tr);
-
-    // Автоматическая высота у всех текстовых полей — без внутреннего скролла и ползунков
-    tr.querySelectorAll('textarea').forEach(autosizeTextarea);
-
-    // Мгновенная подсветка цветом при выборе нового статуса, до сохранения
-    const statusSel = tr.querySelector('[data-field="status"]');
-    if (statusSel) {
-      statusSel.addEventListener('change', () => {
-        statusSel.className = 'statusSelect status-' + statusSel.value;
-      });
-    }
-    tr.querySelectorAll('[data-field]').forEach(el => {
-      const evt = (el.tagName === 'SELECT' || el.type === 'date') ? 'change' : 'input';
-      el.addEventListener(evt, () => {
-        if(el.dataset.field === 'assignee'){
-          const display = el.parentElement.querySelector('.assigneeDisplay');
-          if (display) {
-            const [bg,fg] = employeeColor(el.value);
-            display.style.background = bg;
-            display.style.color = fg;
-            display.innerHTML = `<span class="employeeDot"></span>${escapeHtml(el.value || 'Не назначен')}`;
+        peer.on('open', (id) => {
+          if (currentUser.role === 'student') {
+            const call = peer.call(ROOM_ID, localStream);
+            call.on('stream', (remoteStream) => {
+              addVideoCard('teacher-video', 'Учитель', remoteStream);
+            });
           }
-          el.title = el.value;
+        });
+
+        peer.on('call', (call) => {
+          call.answer(localStream);
+          call.on('stream', (remoteStream) => {
+            addVideoCard(call.peer, 'Ученик', remoteStream);
+          });
+        });
+      } catch (err) {
+        alert("Ошибка доступа к камере/микрофону: " + err.message);
+      }
+    }
+
+    function addVideoCard(id, label, stream, isMuted = false) {
+      if (document.getElementById(id)) return;
+      const grid = document.getElementById('video-grid');
+      const card = document.createElement('div');
+      card.className = 'video-card';
+      card.id = id;
+
+      const video = document.createElement('video');
+      video.id = 'video-element-' + id;
+      video.srcObject = stream;
+      video.autoplay = true;
+      video.playsInline = true;
+      if (isMuted) video.muted = true;
+
+      const nameTag = document.createElement('div');
+      nameTag.className = 'name-tag';
+      nameTag.innerText = label;
+
+      card.appendChild(video);
+      card.appendChild(nameTag);
+      grid.appendChild(card);
+    }
+
+    // 1. ВЫБОР ТРАНСЛЯЦИИ (ВЕСЬ ЭКРАН / ОКНО / ВКЛАДКА)
+    async function shareScreen() {
+      try {
+        // Браузер сам покажет системное окно выбора: Весь экран, Окно приложения или Вкладка
+        const screenStream = await navigator.mediaDevices.getDisplayMedia({ 
+          video: { cursor: "always" },
+          audio: false 
+        });
+        addVideoCard('screen-share', 'Трансляция Экрана/Окна', screenStream);
+      } catch (e) {
+        console.log("Отмена выбора экрана");
+      }
+    }
+
+    // 2. РЕЖИМ PICTURE-IN-PICTURE (Картинка в картинке поверх всех окон)
+    async function togglePiP() {
+      try {
+        const firstVideo = document.querySelector('.video-card video');
+        if (firstVideo && document.pictureInPictureEnabled) {
+          if (document.pictureInPictureElement) {
+            await document.exitPictureInPicture();
+          } else {
+            await firstVideo.requestPictureInPicture();
+          }
+        } else {
+          alert("Режим Picture-in-Picture не поддерживается вашим браузером");
         }
-        scheduleAutoSave(tr);
-      });
-    });
-  });
-  body.appendChild(addRow);
-}
-
-function autosizeTextarea(el){
-  el.style.height = 'auto';
-  el.style.height = (el.scrollHeight) + 'px';
-  if (!el.dataset.autosizeBound) {
-    el.addEventListener('input', () => autosizeTextarea(el));
-    el.dataset.autosizeBound = '1';
-  }
-}
-
-async function saveTaskRow(tr, silent=false){
-  const rowNumber = tr.dataset.row;
-  const existing = tasks.find(t => t.rowNumber == rowNumber);
-  if(!existing || existing.deleteMarker === 'deleted_by_manager') return;
-  const role = currentUser.role;
-  const isCreatorSupervisor = role === 'supervisor' && existing.creator.trim().toLowerCase() === currentUser.displayName.trim().toLowerCase();
-  try{
-    setSaveState('Сохраняю изменения…','saving');
-    let fields = {};
-    if (role === 'admin' || role === 'manager' || isCreatorSupervisor) {
-      tr.querySelectorAll('[data-field]').forEach(el => fields[el.dataset.field] = el.value);
-    } else if (role === 'supervisor') {
-      fields.managerComment = tr.querySelector('[data-field="managerComment"]')?.value || '';
-    } else if (role === 'employee') {
-      fields.status = tr.querySelector('[data-field="status"]')?.value || existing.status;
-      fields.employeeComment = tr.querySelector('[data-field="employeeComment"]')?.value || '';
+      } catch (e) {
+        console.error("Ошибка PiP:", e);
+      }
     }
-    const data = await apiCall('updateTask', { rowNumber, fields });
-    if (!data.ok) throw new Error(data.error || 'Ошибка сохранения');
-    Object.assign(existing, fields);
 
-    dirtyRows.delete(String(rowNumber)); autoSaveTimers.delete(String(rowNumber)); tr.classList.remove('dirty-row');
-    setSaveState(dirtyRows.size ? `Осталось сохранить: ${dirtyRows.size}` : 'Все изменения сохранены', dirtyRows.size?'saving':'saved');
-    if(!silent){ const btn=tr.querySelector('[data-action="save"]'); if(btn){btn.textContent='Сохранено ✓';setTimeout(()=>btn.textContent='Сохранить',1200);} }
-    if (fields.status !== undefined && fields.status !== existing.status) loadTasks(); // подтянуть свежую историю статуса с сервера
-  }catch(e){ console.error(e); setSaveState('Ошибка сохранения','error'); if(!silent) alert('Не удалось сохранить изменения.'); }
-}
-
-document.getElementById('taskBody').addEventListener('click', async (e) => {
-  const btn = e.target.closest('button');
-  if (!btn) return;
-  
-  const tr = btn.closest('tr');
-  const rowNumber = tr.dataset.row;
-  const action = btn.dataset.action;
-
-  if (action === 'save') {
-    await saveTaskRow(tr, false);
-  } else if (action === 'soft-delete') {
-    if (confirm('Скрыть эту задачу для команды?')) {
-      const data = await apiCall('softDeleteTask', { rowNumber });
-      if (!data.ok) { alert(data.error || 'Не удалось скрыть задачу.'); return; }
-      loadTasks();
+    // 3. РЕЖИМ «ОТДЕЛЬНОЕ ОКНО» (Pop-out Window)
+    function openPopoutWindow() {
+      const popout = window.open("", "PopoutClassroom", "width=400,height=600,resizable=yes");
+      popout.document.write(`
+        <html>
+        <head><title>Плавающее окно Учителя</title></head>
+        <body style="background:#1a1d20; color:#fff; font-family:sans-serif; padding:10px; text-align:center;">
+          <h3>Мини-панель Учителя</h3>
+          <p style="font-size:12px; color:#aaa; margin-top:5px;">Это окно можно сжать и расположить рядом с презентацией.</p>
+          <div style="margin-top:20px;">
+            <button onclick="window.opener.toggleMic()" style="padding:10px; margin:5px;">🎙️ Вкл/Выкл Микрофон</button>
+            <button onclick="window.opener.toggleCam()" style="padding:10px; margin:5px;">📷 Вкл/Выкл Камеру</button>
+          </div>
+        </body>
+        </html>
+      `);
     }
-  } else if (action === 'hard-delete') {
-    if (confirm('Вы уверены, что хотите окончательно стереть эту задачу из базы данных?')) {
-      const data = await apiCall('hardDeleteTask', { rowNumber });
-      if (!data.ok) { alert(data.error || 'Не удалось удалить строку.'); return; }
-      loadTasks();
+
+    function toggleMic() {
+      const track = localStream.getAudioTracks()[0];
+      if (track) track.enabled = !track.enabled;
     }
-  }
-});
 
-document.getElementById('showAddBtn').addEventListener('click', () => {
-  document.getElementById('addRow').classList.toggle('hidden');
-  autosizeTextarea(document.getElementById('newTask'));
-});
-document.getElementById('newTask').addEventListener('input', () => autosizeTextarea(document.getElementById('newTask')));
-
-document.getElementById('saveNewBtn').addEventListener('click', async () => {
-  const fields = {
-    task: document.getElementById('newTask').value,
-    assignee: document.getElementById('newAssignee').value,
-    deadline: document.getElementById('newDeadline').value,
-    status: document.getElementById('newStatus').value,
-    priority: document.getElementById('newPriority').value,
-    notes: document.getElementById('newNotes').value
-  };
-  if (!fields.task){ alert('Впиши название задачи'); return; }
-  try{
-    const data = await apiCall('addTask', { fields });
-    if (!data.ok) throw new Error(data.error || 'Ошибка');
-    ['newTask','newAssignee','newDeadline','newNotes'].forEach(id => document.getElementById(id).value = '');
-    document.getElementById('addRow').classList.add('hidden');
-    loadTasks();
-  } catch(e){ alert('Не удалось добавить задачу.'); }
-});
-
-// Слушатели фильтров колонок
-document.getElementById('filterAssignee').addEventListener('change', renderTasks);
-document.getElementById('filterStatus').addEventListener('change', renderTasks);
-document.getElementById('filterPriority').addEventListener('change', renderTasks);
-document.getElementById('filterCreator').addEventListener('change', renderTasks);
-document.getElementById('filterDeadline').addEventListener('change', renderTasks);
-
-document.getElementById('resetFiltersBtn').addEventListener('click', () => {
-  document.getElementById('filterAssignee').value = "";
-  document.getElementById('filterStatus').value = "";
-  document.getElementById('filterPriority').value = "";
-  document.getElementById('filterCreator').value = "";
-  document.getElementById('filterDeadline').value = "";
-  renderTasks();
-});
-
-document.getElementById('refreshBtn').addEventListener('click', loadTasks);
-
-
-function getCurrentFilteredTasks(){
-  const fAssignee=filterAssignee.value,fStatus=filterStatus.value,fPriority=filterPriority.value,fCreator=filterCreator.value,fDeadline=filterDeadline.value;
-  return tasks.filter(t=>{
-    if(fAssignee&&t.assignee!==fAssignee)return false;if(fPriority&&t.priority!==fPriority)return false;if(fCreator&&t.creator!==fCreator)return false;if(fDeadline&&t.deadline!==fDeadline)return false;
-    if(fStatus){if(fStatus==='late')return isOverdue(t);if(fStatus==='deleted')return t.deleteMarker==='deleted_by_manager';return t.status===fStatus&&t.deleteMarker!=='deleted_by_manager';}return true;
-  });
-}
-function exportRows(){
-  const labels={todo:'К выполнению',progress:'В работе',done:'Готово'};
-  return getCurrentFilteredTasks().map(t=>({
-    'Дата составления':t.createdDate,'Задача':t.task,'Исполнитель':t.assignee,'Дедлайн':t.deadline,'Статус':isOverdue(t)?'Просрочено':(labels[t.status]||t.status),
-    'Приоритет':t.priority,'Комментарий менеджера':t.notes,'Комментарий руководителя':t.managerComment,'Комментарий сотрудника':t.employeeComment,'Кто поставил':t.creator,
-    'Статус изменил':t.statusChangedBy,'Когда изменён статус':t.statusChangedAt
-  }));
-}
-document.getElementById('saveAllBtn').addEventListener('click',async()=>{
-  if(isBulkSaving)return; isBulkSaving=true;
-  const rows=[...document.querySelectorAll('#taskBody tr[data-row]')].filter(tr=>dirtyRows.has(String(tr.dataset.row)));
-  if(!rows.length){setSaveState('Нет несохранённых изменений','saved');isBulkSaving=false;return;}
-  for(const tr of rows) await saveTaskRow(tr,true);
-  setSaveState('Все изменения быстро сохранены','saved'); isBulkSaving=false;
-});
-document.getElementById('exportExcelBtn').addEventListener('click',()=>{
-  const data=exportRows(); if(!data.length){alert('В текущей выборке нет задач.');return;}
-  const ws=XLSX.utils.json_to_sheet(data); const wb=XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb,ws,'Текущая выборка'); XLSX.writeFile(wb,'tasks-current-filter.xlsx');
-});
-document.getElementById('exportPdfBtn').addEventListener('click',()=>{
-  const data=exportRows(); if(!data.length){alert('В текущей выборке нет задач.');return;}
-  const labels=Object.keys(data[0]);
-  const rows=data.map(item=>`<tr>${labels.map(k=>`<td>${escapeHtml(item[k]||'')}</td>`).join('')}</tr>`).join('');
-  const win=window.open('','_blank');
-  if(!win){alert('Браузер заблокировал окно PDF. Разрешите всплывающие окна для этого сайта.');return;}
-  win.document.write(`<!DOCTYPE html><html lang="ru"><head><meta charset="UTF-8"><title>Текущая выборка задач</title><style>@page{size:A4 landscape;margin:8mm}body{font-family:Arial,sans-serif;color:#111}h1{font-size:18px}table{width:100%;border-collapse:collapse;font-size:8px}th,td{border:1px solid #bbb;padding:4px;vertical-align:top;word-break:break-word}th{background:#eee}small{color:#666}</style></head><body><h1>Текущая выборка задач</h1><small>Сформировано: ${new Date().toLocaleString('ru-RU')}</small><table><thead><tr>${labels.map(k=>`<th>${escapeHtml(k)}</th>`).join('')}</tr></thead><tbody>${rows}</tbody></table><script>window.onload=()=>{window.print();}<\/script></body></html>`);
-  win.document.close();
-});
-document.getElementById('mobileFilterToggle').addEventListener('click',()=>{
-  const bar=document.getElementById('filterBar'); const collapsed=bar.classList.toggle('mobile-collapsed'); document.getElementById('mobileFilterIcon').textContent=collapsed?'▶':'▼';
-});
-
-function escapeHtml(str){
-  return String(str).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-}
-
-function updateStickyOffset(){
-  const header = document.querySelector('header');
-  const sticky = document.getElementById('stickyControls');
-  if (header && sticky) sticky.style.top = header.offsetHeight + 'px';
-}
-window.addEventListener('resize', updateStickyOffset);
-window.addEventListener('load', updateStickyOffset);
-updateStickyOffset();
-</script>
+    function toggleCam() {
+      const track = localStream.getVideoTracks()[0];
+      if (track) track.enabled = !track.enabled;
+    }
+  </script>
 </body>
 </html>
