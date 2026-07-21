@@ -9,46 +9,46 @@
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
     html, body { width: 100%; height: 100%; background: #121417; color: #fff; overflow: hidden; }
     
-    /* Авторизация */
+    /* Экран входа */
     #auth-screen { display: flex; justify-content: center; align-items: center; height: 100vh; background: #0b0c0e; padding: 20px; }
-    .auth-card { background: #1e2227; padding: 35px 25px; border-radius: 16px; width: 100%; max-width: 360px; text-align: center; border: 1px solid #2d3239; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+    .auth-card { background: #1e2227; padding: 30px 20px; border-radius: 16px; width: 100%; max-width: 360px; text-align: center; border: 1px solid #2d3239; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
     .auth-card h2 { margin-bottom: 8px; color: #4da6ff; font-size: 22px; }
     .auth-card p { font-size: 13px; color: #9aa0a6; margin-bottom: 25px; }
     .btn-login { width: 100%; padding: 14px; margin-bottom: 12px; border: none; border-radius: 8px; font-weight: bold; font-size: 15px; cursor: pointer; transition: 0.2s; }
     .btn-teacher { background: #0084ff; color: #fff; }
     .btn-student { background: #28a745; color: #fff; }
     
-    /* Главный интерфейс класса (Жесткая структура без вылезаний) */
-    #classroom { display: none; flex-direction: column; width: 100vw; height: 100vh; background: #121417; }
+    /* Главный рабочий класс */
+    #classroom { display: none; flex-direction: column; width: 100vw; height: 100vh; position: relative; background: #121417; }
     
-    header { height: 48px; background: #1a1d22; padding: 0 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #2d3239; flex-shrink: 0; }
+    header { height: 48px; background: #1a1d22; padding: 0 15px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #2d3239; flex-shrink: 0; z-index: 10; }
     .role-badge { background: #4da6ff; color: #000; padding: 3px 8px; border-radius: 10px; font-weight: bold; font-size: 11px; margin-left: 8px; }
 
-    /* Центральная сцена */
-    .stage-container { flex: 1; display: flex; flex-direction: column; gap: 10px; padding: 10px; overflow: hidden; position: relative; }
+    /* Область сцены */
+    .stage-container { flex: 1; display: flex; flex-direction: column; gap: 10px; padding: 10px; padding-bottom: 75px; overflow-y: auto; overflow-x: hidden; }
     
-    /* Блок главной трансляции (Презентация) */
-    #screen-stage { flex: 1; min-height: 0; background: #000; border-radius: 12px; border: 2px solid #28a745; display: none; position: relative; overflow: hidden; }
+    /* Блок трансляции экрана */
+    #screen-stage { height: 55vh; min-height: 200px; background: #000; border-radius: 12px; border: 2px solid #28a745; display: none; position: relative; overflow: hidden; flex-shrink: 0; }
     #screen-stage video { width: 100%; height: 100%; object-fit: contain; }
     #screen-stage .stage-label { position: absolute; top: 10px; left: 10px; background: rgba(0,0,0,0.75); padding: 4px 10px; border-radius: 6px; font-size: 12px; font-weight: bold; color: #28a745; z-index: 5; }
 
-    /* Полоса веб-камер учеников и учителя */
-    .cams-row { height: 140px; display: flex; gap: 10px; overflow-x: auto; overflow-y: hidden; flex-shrink: 0; padding-bottom: 5px; }
+    /* Сетка видеокамер */
+    .cams-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; width: 100%; }
     
-    /* В режиме без трансляции камеры занимают весь экран */
-    .classroom-no-screen #screen-stage { display: none; }
-    .classroom-no-screen .cams-row { flex: 1; height: auto; display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); align-content: start; overflow-y: auto; }
+    /* Карточка видеокамеры */
+    .cam-card { background: #000; border-radius: 10px; overflow: hidden; position: relative; aspect-ratio: 16/9; border: 1px solid #2d3239; display: flex; flex-direction: column; justify-content: flex-end; }
+    .cam-card video { width: 100%; height: 100%; object-fit: cover; position: absolute; top: 0; left: 0; }
+    .cam-card .info-bar { position: absolute; bottom: 0; left: 0; right: 0; background: linear-gradient(transparent, rgba(0,0,0,0.85)); padding: 6px 8px; display: flex; justify-content: space-between; align-items: center; z-index: 2; }
+    .cam-card .name-tag { font-size: 11px; font-weight: bold; color: #fff; text-shadow: 0 1px 2px #000; }
+    
+    /* Кнопки модерации для учителя */
+    .teacher-actions { display: flex; gap: 4px; }
+    .btn-mod { background: rgba(255,255,255,0.2); border: none; color: #fff; padding: 3px 6px; border-radius: 4px; font-size: 10px; cursor: pointer; backdrop-filter: blur(4px); }
+    .btn-mod:hover { background: #ff4d4d; }
 
-    /* Карточка камеры */
-    .cam-card { background: #000; border-radius: 8px; overflow: hidden; position: relative; aspect-ratio: 16/9; min-width: 180px; height: 100%; border: 1px solid #2d3239; flex-shrink: 0; }
-    .classroom-no-screen .cam-card { min-width: unset; height: auto; }
-    .cam-card video { width: 100%; height: 100%; object-fit: cover; }
-    .cam-card .name-tag { position: absolute; bottom: 6px; left: 6px; background: rgba(0,0,0,0.75); padding: 2px 6px; border-radius: 4px; font-size: 11px; font-weight: bold; }
-
-    /* Закрепленная нижняя панель управления */
-    .controls-bar { height: 60px; background: #1a1d22; border-top: 1px solid #2d3239; display: flex; justify-content: center; align-items: center; gap: 8px; padding: 0 10px; flex-shrink: 0; z-index: 10; }
-    .btn { padding: 10px 14px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; display: flex; align-items: center; gap: 6px; font-size: 13px; white-space: nowrap; transition: 0.15s; }
-    .btn:active { transform: scale(0.96); }
+    /* ГАРАНТИРОВАННО ЗАКРЕПЛЕННЫЙ НИЖНИЙ ПУЛЬТ (Никогда не исчезает) */
+    .controls-bar { position: fixed; bottom: 0; left: 0; right: 0; height: 65px; background: #1a1d22; border-top: 1px solid #2d3239; display: flex; justify-content: center; align-items: center; gap: 6px; padding: 0 10px; z-index: 9999; flex-wrap: nowrap; overflow-x: auto; }
+    .btn { padding: 10px 12px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; display: flex; align-items: center; gap: 5px; font-size: 12px; white-space: nowrap; flex-shrink: 0; }
     .btn-danger { background: #ff4d4d; color: #fff; }
     .btn-secondary { background: #2d3239; color: #fff; }
     .btn-success { background: #28a745; color: #fff; }
@@ -56,47 +56,45 @@
     .btn-info { background: #17a2b8; color: #fff; }
   </style>
 </head>
-<body class="classroom-no-screen">
+<body>
 
-  <!-- 1. АВТОРИЗАЦИЯ -->
+  <!-- 1. ЭКРАН ВХОДА -->
   <div id="auth-screen">
     <div class="auth-card">
       <h2>Быстрый Вход</h2>
-      <p>Выберите роль для тестирования:</p>
+      <p>Выберите роль для подключения:</p>
       <button class="btn-login btn-teacher" onclick="loginAs('teacher')">👨‍🏫 Войти как Учитель</button>
       <button class="btn-login btn-student" onclick="loginAs('student')">👦 Войти как Ученик</button>
     </div>
   </div>
 
-  <!-- 2. ИНТЕРФЕЙС КЛАССА -->
+  <!-- 2. ИНТЕРФЕЙС УРОКА -->
   <div id="classroom">
     <header>
       <div>
         <span id="user-display-name">Пользователь</span>
         <span id="user-role-badge" class="role-badge">Ученик</span>
       </div>
-      <div style="font-size: 13px; color: #9aa0a6;">Платформа «Координатор»</div>
+      <div style="font-size: 12px; color: #9aa0a6;">«Координатор»</div>
     </header>
 
     <div class="stage-container">
-      <!-- Блок трансляции экрана -->
+      <!-- Трансляция Экрана -->
       <div id="screen-stage">
         <div class="stage-label" id="stage-label">🖥️ Трансляция Экрана</div>
         <video id="screen-video" autoplay playsinline></video>
       </div>
 
-      <!-- Ряд видеокамер -->
-      <div class="cams-row" id="cams-row">
-        <!-- Карточки камиерас -->
-      </div>
+      <!-- Сетка Камер -->
+      <div class="cams-grid" id="cams-grid"></div>
     </div>
 
-    <!-- Фиксированный пульт управления -->
+    <!-- Фиксированный Пульт Управления -->
     <div class="controls-bar">
       <button class="btn btn-secondary" id="btn-mic" onclick="toggleMic()">🎙️ Микрофон</button>
       <button class="btn btn-secondary" id="btn-cam" onclick="toggleCam()">📷 Камера</button>
       
-      <!-- Только у Учителя -->
+      <!-- Только для Учителя -->
       <button class="btn btn-success" id="btn-share" style="display:none;" onclick="shareScreen()">🖥️ Трансляция</button>
       <button class="btn btn-warning" id="btn-stop-share" style="display:none;" onclick="stopScreenShare()">⏹️ Стоп экран</button>
       <button class="btn btn-info" id="btn-pip" style="display:none;" onclick="togglePiP()">🔲 PiP</button>
@@ -112,7 +110,7 @@
     let localStream = null;
     let screenStream = null;
     let peer = null;
-    let activeCalls = [];
+    let activeConnections = {}; // Храним DataConnection к каждому ученику
     let popoutWindow = null;
 
     function loginAs(role) {
@@ -148,14 +146,24 @@
 
         peer.on('open', (id) => {
           if (currentUser.role === 'student') {
+            // Подключение к Учителю
             const call = peer.call(ROOM_ID, localStream, { metadata: { type: 'camera', studentName: currentUser.name } });
             handleIncomingCall(call);
+
+            // Сигнальный канал для получения команд модерации от Учителя
+            const conn = peer.connect(ROOM_ID);
+            conn.on('data', handleDataMessage);
           }
         });
 
+        // Прием звонков и сигналов у Учителя
         peer.on('call', (call) => {
           call.answer(localStream);
           handleIncomingCall(call);
+        });
+
+        peer.on('connection', (conn) => {
+          activeConnections[conn.peer] = conn;
         });
 
       } catch (err) {
@@ -163,8 +171,26 @@
       }
     }
 
+    // Обработка команд модерации (Принудительное выключение звука/видео)
+    function handleDataMessage(data) {
+      if (data.action === 'mute_mic') {
+        const track = localStream.getAudioTracks()[0];
+        if (track) {
+          track.enabled = false;
+          updateMicBtnState(false);
+          alert("Учитель отключил ваш микрофон");
+        }
+      } else if (data.action === 'mute_cam') {
+        const track = localStream.getVideoTracks()[0];
+        if (track) {
+          track.enabled = false;
+          updateCamBtnState(false);
+          alert("Учитель отключил вашу камеру");
+        }
+      }
+    }
+
     function handleIncomingCall(call) {
-      activeCalls.push(call);
       call.on('stream', (remoteStream) => {
         const isScreen = call.metadata && call.metadata.type === 'screen';
         const studentName = (call.metadata && call.metadata.studentName) ? call.metadata.studentName : 'Ученик';
@@ -172,35 +198,89 @@
         if (isScreen) {
           showScreenStage(remoteStream, '🖥️ Трансляция Учителя');
         } else {
-          addCamCard(call.peer, currentUser.role === 'teacher' ? studentName : 'Учитель', remoteStream);
+          addCamCard(call.peer, currentUser.role === 'teacher' ? studentName : 'Учитель', remoteStream, false, call.peer);
         }
       });
 
       call.on('close', () => {
-        hideScreenStage();
+        removeCamCard(call.peer);
       });
     }
 
-    // 1. ЗАПУСК И ОБНОВЛЕНИЕ ТРАНСЛЯЦИИ ЭКРАНА
-    async function shareScreen() {
-      if (screenStream) {
-        stopScreenShare();
+    // Добавление видеокаточки
+    function addCamCard(id, label, stream, isMuted = false, peerId = null) {
+      let card = document.getElementById(id);
+      if (!card) {
+        const grid = document.getElementById('cams-grid');
+        card = document.createElement('div');
+        card.className = 'cam-card';
+        card.id = id;
+
+        const video = document.createElement('video');
+        video.srcObject = stream;
+        video.autoplay = true;
+        video.playsInline = true;
+        video.setAttribute('playsinline', 'true');
+        if (isMuted) video.muted = true;
+
+        const infoBar = document.createElement('div');
+        infoBar.className = 'info-bar';
+
+        const nameTag = document.createElement('span');
+        nameTag.className = 'name-tag';
+        nameTag.innerText = label;
+        infoBar.appendChild(nameTag);
+
+        // Если вошел Учитель и это карточка Ученика — добавляем кнопки отключения
+        if (currentUser.role === 'teacher' && peerId) {
+          const modBox = document.createElement('div');
+          modBox.className = 'teacher-actions';
+          modBox.innerHTML = `
+            <button class="btn-mod" onclick="remoteMuteStudent('${peerId}', 'mic')" title="Выключить микрофон">🔇</button>
+            <button class="btn-mod" onclick="remoteMuteStudent('${peerId}', 'cam')" title="Выключить камеру">🚫</button>
+          `;
+          infoBar.appendChild(modBox);
+        }
+
+        card.appendChild(video);
+        card.appendChild(infoBar);
+        grid.appendChild(card);
+
+        updatePopoutCams();
+      } else {
+        card.querySelector('video').srcObject = stream;
       }
+    }
+
+    function removeCamCard(id) {
+      const card = document.getElementById(id);
+      if (card) card.remove();
+      updatePopoutCams();
+    }
+
+    // Команда Учителя на отключение микрофона/камеры ученика
+    function remoteMuteStudent(peerId, type) {
+      const conn = activeConnections[peerId];
+      if (conn) {
+        conn.send({ action: type === 'mic' ? 'mute_mic' : 'mute_cam' });
+      }
+    }
+
+    // Управление трансляцией
+    async function shareScreen() {
+      if (screenStream) stopScreenShare();
 
       try {
         screenStream = await navigator.mediaDevices.getDisplayMedia({ video: { cursor: "always" }, audio: false });
-
         showScreenStage(screenStream, '🖥️ Ваша Трансляция');
         document.getElementById('btn-stop-share').style.display = 'inline-flex';
 
-        activeCalls.forEach(call => {
-          peer.call(call.peer, screenStream, { metadata: { type: 'screen' } });
+        // Рассылаем экран ученикам
+        Object.keys(activeConnections).forEach(pId => {
+          peer.call(pId, screenStream, { metadata: { type: 'screen' } });
         });
 
-        screenStream.getVideoTracks()[0].onended = () => {
-          stopScreenShare();
-        };
-
+        screenStream.getVideoTracks()[0].onended = () => stopScreenShare();
       } catch (e) {
         console.log("Отмена трансляции");
       }
@@ -211,13 +291,11 @@
         screenStream.getTracks().forEach(track => track.stop());
         screenStream = null;
       }
-      hideScreenStage();
+      document.getElementById('screen-stage').style.display = 'none';
       document.getElementById('btn-stop-share').style.display = 'none';
     }
 
-    // Управление отображением Сцены Трансляции
     function showScreenStage(stream, labelText) {
-      document.body.classList.remove('classroom-no-screen');
       const stage = document.getElementById('screen-stage');
       const video = document.getElementById('screen-video');
       document.getElementById('stage-label').innerText = labelText;
@@ -225,68 +303,36 @@
       stage.style.display = 'block';
     }
 
-    function hideScreenStage() {
-      document.body.classList.add('classroom-no-screen');
-      const stage = document.getElementById('screen-stage');
-      const video = document.getElementById('screen-video');
-      video.srcObject = null;
-      stage.style.display = 'none';
-    }
-
-    // Добавление веб-камеры в полосу
-    function addCamCard(id, label, stream, isMuted = false) {
-      let card = document.getElementById(id);
-      if (!card) {
-        const row = document.getElementById('cams-row');
-        card = document.createElement('div');
-        card.className = 'cam-card';
-        card.id = id;
-
-        const video = document.createElement('video');
-        video.id = 'vid-' + id;
-        video.srcObject = stream;
-        video.autoplay = true;
-        video.playsInline = true;
-        if (isMuted) video.muted = true;
-
-        const nameTag = document.createElement('div');
-        nameTag.className = 'name-tag';
-        nameTag.innerText = label;
-
-        card.appendChild(video);
-        card.appendChild(nameTag);
-        row.appendChild(card);
-
-        // Если открыто продвинутое окно учителя — дублируем поток туда
-        updatePopoutCams();
-      } else {
-        card.querySelector('video').srcObject = stream;
-      }
-    }
-
-    // 2. ВЫНОСНОЕ «ОКНО УЧИТЕЛЯ» С КАМЕРАМИ ДЕТЕЙ И ПУЛЬТОМ
+    // ЕДИНСТВЕННОЕ И ЧИСТОЕ ВЫНОСНОЕ ОКНО УЧИТЕЛЯ (Без дублирования!)
     function openPopoutWindow() {
-      popoutWindow = window.open("", "TeacherPopout", "width=500,height=700,resizable=yes");
+      if (popoutWindow && !popoutWindow.closed) {
+        popoutWindow.focus();
+        return;
+      }
+
+      popoutWindow = window.open("", "TeacherPopout", "width=450,height=600,resizable=yes");
       popoutWindow.document.write(`
+        <!DOCTYPE html>
         <html>
         <head>
           <title>Видеокабинет Учителя</title>
           <style>
-            body { background: #121417; color: #fff; font-family: sans-serif; margin:0; padding: 10px; display:flex; flex-direction:column; height:100vh; box-sizing:border-box; }
-            h4 { text-align: center; color: #4da6ff; margin-bottom: 10px; }
-            #popout-cams { flex: 1; display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px; overflow-y: auto; }
+            * { box-sizing: border-box; margin:0; padding:0; font-family:sans-serif; }
+            body { background: #121417; color: #fff; padding: 10px; display:flex; flex-direction:column; height:100vh; }
+            h4 { text-align: center; color: #4da6ff; margin-bottom: 10px; font-size:14px; }
+            #popout-grid { flex: 1; display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px; overflow-y: auto; }
             .pop-card { background: #000; border-radius: 8px; position: relative; aspect-ratio: 16/9; overflow: hidden; border: 1px solid #2d3239; }
             .pop-card video { width:100%; height:100%; object-fit:cover; }
             .pop-card .tag { position:absolute; bottom:4px; left:4px; background:rgba(0,0,0,0.7); font-size:10px; padding:2px 5px; border-radius:3px; }
-            .pop-controls { display:flex; gap:6px; justify-content:center; margin-top:10px; flex-wrap:wrap; }
-            button { padding:8px 12px; border:none; border-radius:6px; font-weight:bold; cursor:pointer; font-size:12px; }
+            .pop-controls { display:flex; gap:6px; justify-content:center; padding-top:10px; flex-wrap:nowrap; }
+            button { padding:8px 10px; border:none; border-radius:6px; font-weight:bold; cursor:pointer; font-size:11px; white-space:nowrap; }
             .btn-blue { background:#0084ff; color:#fff; }
             .btn-green { background:#28a745; color:#fff; }
           </style>
         </head>
         <body>
           <h4>👨‍🏫 Ученики (Плавающий экран)</h4>
-          <div id="popout-cams"></div>
+          <div id="popout-grid"></div>
           <div class="pop-controls">
             <button class="btn-blue" onclick="window.opener.toggleMic()">🎙️ Микрофон</button>
             <button class="btn-blue" onclick="window.opener.toggleCam()">📷 Камера</button>
@@ -300,10 +346,10 @@
 
     function updatePopoutCams() {
       if (!popoutWindow || popoutWindow.closed) return;
-      const container = popoutWindow.document.getElementById('popout-cams');
-      if (!container) return;
+      const grid = popoutWindow.document.getElementById('popout-grid');
+      if (!grid) return;
       
-      container.innerHTML = '';
+      grid.innerHTML = '';
       document.querySelectorAll('.cam-card').forEach(card => {
         const origVideo = card.querySelector('video');
         const name = card.querySelector('.name-tag').innerText;
@@ -322,17 +368,17 @@
 
         popCard.appendChild(v);
         popCard.appendChild(t);
-        container.appendChild(popCard);
+        grid.appendChild(popCard);
       });
     }
 
+    // Вкл/Выкл локального микрофона и камеры
     function toggleMic() {
       if (!localStream) return;
       const track = localStream.getAudioTracks()[0];
       if (track) {
         track.enabled = !track.enabled;
-        const btn = document.getElementById('btn-mic');
-        btn.style.opacity = track.enabled ? '1' : '0.4';
+        updateMicBtnState(track.enabled);
       }
     }
 
@@ -341,9 +387,20 @@
       const track = localStream.getVideoTracks()[0];
       if (track) {
         track.enabled = !track.enabled;
-        const btn = document.getElementById('btn-cam');
-        btn.style.opacity = track.enabled ? '1' : '0.4';
+        updateCamBtnState(track.enabled);
       }
+    }
+
+    function updateMicBtnState(enabled) {
+      const btn = document.getElementById('btn-mic');
+      btn.style.opacity = enabled ? '1' : '0.4';
+      btn.innerText = enabled ? '🎙️ Микрофон' : '🔇 Выкл Микр';
+    }
+
+    function updateCamBtnState(enabled) {
+      const btn = document.getElementById('btn-cam');
+      btn.style.opacity = enabled ? '1' : '0.4';
+      btn.innerText = enabled ? '📷 Камера' : '🚫 Выкл Кам';
     }
 
     async function togglePiP() {
